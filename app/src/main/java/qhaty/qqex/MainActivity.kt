@@ -1,20 +1,27 @@
 package qhaty.qqex
 
-import androidx.appcompat.app.AppCompatActivity
+import android.app.Activity
 import android.os.Bundle
+import com.chibatching.kotpref.Kotpref
+import com.jaredrummler.android.shell.Shell
 import io.noties.markwon.Markwon
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Markwon.create(this).setMarkdown(info, INFO)
+        Kotpref.init(this)
+        Markwon.create(this).setMarkdown(info, infoT)
+        exp_bt.setOnClickListener { GlobalScope.launch { } }
     }
 
     companion object {
-        const val INFO = """# QQ聊天记录导出
+        private val infoT by lazy {
+            """# QQ聊天记录导出
 
 ## 获取数据库 以下二选一
 
@@ -37,5 +44,6 @@ class MainActivity : AppCompatActivity() {
 >12345.db  
 slowtable_123456.db
         """
+        }
     }
 }

@@ -27,6 +27,12 @@
         android:layout_height="wrap_content"
         android:hint="设备key (选填)" />
 
+    <EditText
+        android:id="@+id/last_chat_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="最后一句聊天(六个汉字以上,选填)" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -41,14 +47,7 @@
             android:text="导出" />
 
         <Button
-            android:id="@+id/suan"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="计算QQkey" />
-
-        <Button
-            android:id="@+id/set"
+            android:id="@+id/set_bt"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
