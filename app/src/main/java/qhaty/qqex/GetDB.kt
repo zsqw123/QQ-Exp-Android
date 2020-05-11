@@ -23,11 +23,11 @@ class GetDB(private var context: Context) {
                 copyUseRoot()
                 listOf(dbFileNew)
             } else {
-                withContext(Dispatchers.Main) { context.toast("无法获取聊天数据文件") }
+                runOnUI { context.toast("无法获取聊天数据文件") }
                 null
             }
         } else {
-            withContext(Dispatchers.Main) { context.toast("无内置储存") }
+            runOnUI { context.toast("无内置储存") }
             return null
         }
     }

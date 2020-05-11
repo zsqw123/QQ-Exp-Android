@@ -3,13 +3,13 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion 'android-R'
+//    buildToolsVersion "30.0.0-rc4"
 
     defaultConfig {
         applicationId "qhaty.qqex"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 'R'
         versionCode 1
         versionName "1.0"
     }
@@ -33,4 +33,5 @@ dependencies {
     implementation 'com.chibatching.kotpref:kotpref:2.10.0'
     implementation "com.louiscad.splitties:splitties-alertdialog:3.0.0-alpha06"
     implementation 'com.jaredrummler:android-shell:1.0.0'
+    implementation 'com.afollestad:assent:2.3.0'
 }
