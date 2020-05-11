@@ -67,12 +67,12 @@ fun textToDownload(context: Context, fileName: String, text: String) {
 
 fun textToAppData(context: Context, fileName: String, text: String) {
     val path = context.getExternalFilesDir("Data")
-    if (path != null) if (!path.exists()) path.mkdirs()
-    else {
+    if (path != null) {
+        if (!path.exists()) path.mkdirs()
+    } else {
         runOnUI { context.toast("无内置储存") }
         return
     }
-    path!!
     val file = File("${path.absolutePath}/$fileName")
     if (file.exists()) file.delete()
     file.createNewFile()

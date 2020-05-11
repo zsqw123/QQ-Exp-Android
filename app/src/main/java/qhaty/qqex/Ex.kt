@@ -23,11 +23,11 @@ class Ex {
     ) { _, _, new -> onProgressChange(new) }
 
     fun startEx(context: Context, keyGenText: String? = null) {
-        GlobalScope.launch {
+        GlobalScope.launch(Dispatchers.IO) {
             progress = Progress(10, "读取数据库...")
-            val dbFileList = GetDB(context).getDataBase()
+            val dbFileList: List<File>? = GetDB(context).getDataBase()
             if (dbFileList == null) {
-                progress.msg = "无法读取数据库\n请手动导入"
+                progress = Progress(progress.progress, "无法读取数据库\n请手动导入")
                 return@launch
             }
             progress = Progress(50, "导出数据库...")
@@ -37,69 +37,74 @@ class Ex {
 
     private suspend fun doEx(libFileNew: File, libFileOld: File?, context: Context, keyGenText: String? = null) {
         withContext(Dispatchers.IO) {
-            val old = async(Dispatchers.IO) { if (libFileOld != null) addDByPath(libFileOld, keyGenText) }
+            val old = async(Dispatchers.IO) { if (libFileOld != null) addDByPath(libFileOld) }
             val new = async(Dispatchers.IO) { addDByPath(libFileNew, keyGenText) }
             old.await()
             progress = Progress(120, "解析数据库...")
             new.await()
-            progress.progress = 200
+            progress = Progress(200, progress.msg)
             chatsDecode()
             toHtml()
-            progress.msg = "保存网页到本地中..."
+            progress = Progress(progress.progress, "保存网页到本地中...")
             val toDownload = async(Dispatchers.IO) { textToDownload(context, Data.friendQQ, htmlStr) }
             val toData = async(Dispatchers.IO) { textToAppData(context, Data.friendQQ, saveStr) }
             toData.await()
             toDownload.await()
-            progress.progress = 1000
-            progress.msg = "保存成功"
+            progress = Progress(1000, "保存成功")
         }
     }
 
     private fun addDByPath(libFile: File, keyGenText: String? = null) {
-        val sql = SQLiteDatabase.openDatabase(libFile.absolutePath, null, SQLiteDatabase.OPEN_READWRITE)
-        val friendOrTroop = if (Data.friendOrGroup) "friend" else "troop"
-        val sqlDo = "SELECT _id,msgData,msgtype,senderuin,time FROM mr_${friendOrTroop}_" +
-                "${encodeMD5(Data.friendQQ).toUpperCase(Locale.ROOT)}_New ORDER BY time ASC;"
-        val cursor = sql.rawQuery(sqlDo, null)
-        if (cursor.count > 1) cursor.moveToFirst()
-        var first = true
-        val keyGen: Boolean = keyGenText != null
-        do {
-            val single = HashMap<String, Any>()
-            single["data"] = cursor.getBlob(1)
-            single["type"] = cursor.getInt(2)
-            single["sender"] = cursor.getString(3)
-            single["time"] = cursor.getInt(4)
-            allChat.add(single)
-            if (first && keyGen) {
-                dbLastData = single["data"] as ByteArray
-                decodeKey(keyGenText!!)
-                first = false
-            }
-        } while (cursor.moveToNext())
-        sql.close()
-        cursor.close()
+        try {
+            println(libFile.absolutePath)
+            val sql = SQLiteDatabase.openDatabase(libFile.absolutePath, null, 0)
+            val friendOrTroop = if (Data.friendOrGroup) "friend" else "troop"
+            val sqlDo = "SELECT _id,msgData,msgtype,senderuin,time FROM mr_${friendOrTroop}_" +
+                    "${encodeMD5(Data.friendQQ).toUpperCase(Locale.ROOT)}_New"
+            val cursor = sql.rawQuery(sqlDo, null)
+            if (cursor.count > 1) cursor.moveToFirst()
+            var first = true
+            val keyGen: Boolean = keyGenText != null
+            do {
+                val single = HashMap<String, Any>()
+                single["data"] = cursor.getBlob(1)
+                single["type"] = cursor.getInt(2)
+                single["sender"] = cursor.getString(3)
+                single["time"] = cursor.getInt(4)
+                allChat += single
+                if (first && keyGen) {
+                    dbLastData = single["data"] as ByteArray
+                    decodeKey(keyGenText!!)
+                    first = false
+                }
+            } while (cursor.moveToNext())
+            sql.close()
+            cursor.close()
+        } catch (e: java.lang.Exception) {
+        }
+
     }
 
     private fun chatsDecode() {
         val single = hashMapOf<String, Any>()
         val allCount = allChat.size
-        progress.msg = "数据库解码..."
+        progress = Progress(progress.progress, "数据库解码...")
         for (i in allChat.indices) {
             single["time"] = allChat[i]["time"] as Int
             single["type"] = allChat[i]["type"] as Int
             single["sender"] = fix(other = allChat[i]["sender"] as String)
             single["data"] = fix(allChat[i]["data"] as ByteArray)
+//            println(single["data"])
             allChatDecode += single
             if (i % 20 == 0) {
-                progress.progress = ((i.toFloat() / allCount) * 500 + 200).toInt()
+                progress = Progress(((i.toFloat() / allCount) * 500 + 200).toInt(), progress.msg)
             }
         }
         allChatDecode.sortBy { it["time"] as Int }
     }
 
     private fun toHtml() {
-        progress.msg = "导出网页..."
+        progress = Progress(progress.progress, "导出网页...")
         for (i in allChatDecode.indices) {
             val item = allChatDecode[i]
             saveStr += item["data"] as String
@@ -111,7 +116,7 @@ class Ex {
                 continue
             }
             if (i % 20 == 0) {
-                progress.progress = ((i.toFloat() / allChatDecode.size) * 250 + 700).toInt()
+                progress = Progress(((i.toFloat() / allChatDecode.size) * 250 + 700).toInt(), progress.msg)
             }
         }
     }
@@ -161,12 +166,11 @@ fun getDateString(date: Int): String {
 fun fix(msgData: ByteArray? = null, other: String? = null): String {
     if (msgData != null) {
         var rowByte = byteArrayOf()
-        for (i in msgData.indices) rowByte += msgData[i] xor Data.key[i % Data.key.length].toByte()
+        for (i in msgData.indices) rowByte += msgData[i] xor ord(Data.key[i % Data.key.length]).toByte()
         return String(rowByte, charset("UTF-8"))
     } else if (other != null) {
         var str = ""
-        val bytes = other.toByteArray(charset("UTF-8"))
-        for (i in bytes.indices) str += bytes[i] xor Data.key[i % Data.key.length].toByte()
+        for (i in other.indices) str += chr(ord(other[i]) xor ord(Data.key[i % Data.key.length]))
         return str
     }
     return ""
@@ -187,20 +191,20 @@ fun htmlStrByType(type: Int): String = when (type) {
 
 var dbLastData = byteArrayOf()
 fun decodeKey(str: String): String {
-    var keySet = byteArrayOf()
-    val strArrays = str.toByteArray(Charsets.UTF_8)
-    for (i in strArrays.indices) keySet += dbLastData[i] xor strArrays[i]
-    val realKey = byteArrayOf()
-    val nextKey = byteArrayOf()
-    val restKey = byteArrayOf()
-    for (i in 4..keySet.size) {
-        for (j in 0..i) realKey[j] = keySet[j]
-        for (j in i..2 * i) if (2 * i <= keySet.size - 1) nextKey[j] = keySet[j]
-        if (2 * i < keySet.size) for (j in 2 * i until keySet.size) restKey[j] = keySet[j]
+    val msgEnc = str.toByteArray()
+    var keyS = ""
+    for (i in str.indices) keyS += chr((dbLastData[i] xor msgEnc[i]).toInt())
+    var realK = ""
+    var nextK = ""
+    var restK = ""
+    for (i in 4 until keyS.length) {
+        for (j in 0..i) realK += keyS[j]
+        for (j in i..2 * i) catchError { nextK += keyS[j] }
+        if (2 * i < keyS.length) for (j in 2 * i until keyS.length) restK += keyS[j]
         var flagLoop = true
-        for (j in realKey.indices) {
-            if ((j < nextKey.size && realKey[j] != nextKey[j])
-                || (j < restKey.size && realKey[j] != restKey[j])
+        for (j in realK.indices) {
+            if ((j < nextK.length && realK[j] != nextK[j])
+                || (j < restK.length && realK[j] != restK[j])
             ) {
                 flagLoop = false
                 break
@@ -208,7 +212,14 @@ fun decodeKey(str: String): String {
         }
         if (flagLoop) break
     }
-    val keyStr = String(realKey, Charsets.UTF_8)
-    if (Data.key.length < 4) Data.key = keyStr
-    return keyStr
+    return realK
+}
+
+fun ord(char: Char) = char.toInt()
+fun chr(int: Int) = int.toChar()
+fun catchError(method: () -> Unit) {
+    try {
+        method()
+    } catch (e: java.lang.Exception) {
+    }
 }

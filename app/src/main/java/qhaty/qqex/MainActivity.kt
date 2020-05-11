@@ -1,12 +1,12 @@
 package qhaty.qqex
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.telephony.TelephonyManager
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.assent.Permission
 import com.afollestad.assent.askForPermissions
 import com.chibatching.kotpref.Kotpref
@@ -18,9 +18,7 @@ import splitties.alertdialog.alertDialog
 import splitties.alertdialog.okButton
 import java.lang.reflect.Method
 
-
-class MainActivity : Activity() {
-
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -36,30 +34,42 @@ class MainActivity : Activity() {
             if (key_edit.text.toString().isNotBlank()) {
                 Data.key = key_edit.text.toString()
                 if (Data.key.isNotBlank() && Data.meQQ.isNotBlank() && Data.friendQQ.isNotBlank()) {
-                    expDialog().show()
-                    Ex().startEx(this)
+                    askForPermissions(Permission.WRITE_EXTERNAL_STORAGE) {
+                        if (it.isAllGranted(Permission.WRITE_EXTERNAL_STORAGE)) {
+                            expDialog().show()
+                            Ex().startEx(this)
+                        }
+                    }
                 }
             } else {
                 val keyGenText: String = last_chat_edit.text.toString()
                 if (keyGenText.toByteArray().size >= 15) {
-                    expDialog().show()
-                    Ex().startEx(this, keyGenText)
+                    askForPermissions(Permission.WRITE_EXTERNAL_STORAGE) {
+                        if (it.isAllGranted(Permission.WRITE_EXTERNAL_STORAGE)) {
+                            expDialog().show()
+                            Ex().startEx(this, keyGenText)
+                        }
+                    }
                     return@setOnClickListener
                 }
 
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                     alertDialog("未填写key", "请确保授予权限自动获取key\n\n本项目已在GitHub开源,请您放心授予") {
                         okButton {
-                            askForPermissions(Permission.READ_PHONE_STATE) {
-                                if (it.isAllDenied(Permission.READ_PHONE_STATE)) {
+                            askForPermissions(Permission.READ_PHONE_STATE) { a ->
+                                if (a.isAllDenied(Permission.READ_PHONE_STATE)) {
                                     context.toast("请手动授予权限自动获取key")
                                 } else {
                                     try {
                                         val tm = context.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
                                         val method: Method = tm.javaClass.getMethod("getImei")
                                         Data.key = method.invoke(tm) as String
-                                        expDialog().show()
-                                        Ex().startEx(mainContext, keyGenText)
+                                        askForPermissions(Permission.WRITE_EXTERNAL_STORAGE) { result ->
+                                            if (result.isAllGranted(Permission.WRITE_EXTERNAL_STORAGE)) {
+                                                expDialog().show()
+                                                Ex().startEx(mainContext)
+                                            }
+                                        }
                                     } catch (e: Exception) {
                                     }
                                 }
