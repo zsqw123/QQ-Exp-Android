@@ -5,14 +5,16 @@ import android.content.Context
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.*
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import kotlin.properties.Delegates
 
 fun Context.toast(str: String? = null, id: Int? = null) {
     Toast.makeText(this, str ?: this.resources.getText(id!!), Toast.LENGTH_SHORT).show()
@@ -76,4 +78,15 @@ fun textToAppData(context: Context, fileName: String, text: String) {
     file.writeText(text)
 }
 
-fun runOnUI(a: () -> Unit) { GlobalScope.launch(Dispatchers.Main) { a() } }
+fun runOnUI(a: () -> Unit) {
+    GlobalScope.launch(Dispatchers.Main) { a() }
+}
+
+data class Progress(var progress: Int, var msg: String)
+
+class ProgressView {
+    companion object {
+        var progressView: ProgressBar? = null
+        var progressText: TextView? = null
+    }
+}

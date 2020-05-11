@@ -21,6 +21,11 @@
 >12345.db  
 slowtable_123456.db
 
+### 致谢
+
+[roadwide/qqmessageoutput](https://github.com/roadwide/qqmessageoutput)  
+[Yiyiyimu/QQ_History_Backup](https://github.com/Yiyiyimu/QQ_History_Backup)
+
 ### 打赏(
 
 ![alipay](pay.jpg)
