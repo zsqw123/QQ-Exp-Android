@@ -6,6 +6,10 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.*
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
@@ -57,3 +61,19 @@ fun textToDownload(context: Context, fileName: String, text: String) {
         FileOutputStream(file).write(text.toByteArray())
     }
 }
+
+fun textToAppData(context: Context, fileName: String, text: String) {
+    val path = context.getExternalFilesDir("Data")
+    if (path != null) if (!path.exists()) path.mkdirs()
+    else {
+        runOnUI { context.toast("无内置储存") }
+        return
+    }
+    path!!
+    val file = File("${path.absolutePath}/$fileName")
+    if (file.exists()) file.delete()
+    file.createNewFile()
+    file.writeText(text)
+}
+
+fun runOnUI(a: () -> Unit) { GlobalScope.launch(Dispatchers.Main) { a() } }

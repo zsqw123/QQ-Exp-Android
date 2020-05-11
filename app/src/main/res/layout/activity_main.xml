@@ -25,7 +25,7 @@
         android:id="@+id/key_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="设备key (选填)" />
+        android:hint="设备key (选填)(大概率为IMEI)" />
 
     <EditText
         android:id="@+id/last_chat_edit"

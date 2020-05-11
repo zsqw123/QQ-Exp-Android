@@ -7,7 +7,7 @@
 
 ## 获得key 以下二选一
 
-1. 软件自动获取
+1. 软件自动获取 (授予读取设备信息权限 Android Q及以上失效 必须用户手动输入)(其实就是IMEI码 手机拨号界面输入*#06#即可获得)
 2. 给好友发一条七个汉字或更长的消息（即便消息没有发送成功也可）  
 并将这段消息填入计算key的界面中得到key 复制key记录下来  
 
@@ -15,8 +15,12 @@
 
 ### 手动导入
 
-> 将/data/data/com.tencent.mobileqq/databases里面用你的QQ号命名的两个文件复制到sdcard/qhaty.qqex/files
+> 将/data/data/com.tencent.mobileqq/databases里面用你的QQ号命名的两个文件复制到sdcard/Android/data/qhaty.qqex/files
 
 例如我的qq号为12345 则这两个文件为:
 >12345.db  
 slowtable_123456.db
+
+### 打赏(
+
+![alipay](pay.jpg)
