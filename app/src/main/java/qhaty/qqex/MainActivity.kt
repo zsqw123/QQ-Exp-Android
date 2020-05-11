@@ -1,14 +1,17 @@
 package qhaty.qqex
 
 import android.app.Activity
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.telephony.TelephonyManager
+import android.view.View
 import com.afollestad.assent.Permission
 import com.afollestad.assent.askForPermissions
 import com.chibatching.kotpref.Kotpref
 import io.noties.markwon.Markwon
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.exp_dialog.view.*
 import splitties.alertdialog.alertDialog
 import splitties.alertdialog.okButton
 import java.lang.reflect.Method
@@ -31,8 +34,15 @@ class MainActivity : Activity() {
                 Data.key = key_edit.text.toString()
                 if (Data.key.isNotBlank() || Data.meQQ.isNotBlank() || Data.friendQQ.isNotBlank()) Ex().startEx(this)
             } else {
+                val keyGenText: String = last_chat_edit.text.toString()
+                if (keyGenText.toByteArray().size < 15) toast("填写的聊天长度不足")
+                else {
+                    Ex().startEx(this, keyGenText)
+                    return@setOnClickListener
+                }
+
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                    alertDialog("未填写key", "请授予权限自动获取key\n\n本项目已在GitHub开源,请您放心授予") {
+                    alertDialog("未填写key", "请确保授予权限自动获取key\n\n本项目已在GitHub开源,请您放心授予") {
                         okButton {
                             askForPermissions(Permission.READ_PHONE_STATE) {
                                 if (it.isAllDenied(Permission.READ_PHONE_STATE)) {
@@ -67,7 +77,7 @@ class MainActivity : Activity() {
 ## 获得key 以下二选一
 
 1. 软件自动获取 (授予读取设备信息权限 Android Q及以上失效 必须用户手动输入)(其实就是IMEI码 手机拨号界面输入*#06#即可获得)
-2. 给好友发一条七个汉字或更长的消息（即便消息没有发送成功也可）  
+2. 给好友发一条6个汉字或更长的消息（即便消息没有发送成功也可）  
 并将这段消息填入计算key的界面中得到key 复制key记录下来  
 
 ## 附
@@ -83,3 +93,11 @@ slowtable_123456.db
         }
     }
 }
+
+fun Context.expDialog() = alertDialog {
+    setCancelable(false)
+    val view = View.inflate(this@expDialog, R.layout.exp_dialog, null)
+    setView(view)
+    ProgressView.progressView = view.progress_bar
+    ProgressView.progressText = view.progress_text
+}.apply { setCanceledOnTouchOutside(false) }
