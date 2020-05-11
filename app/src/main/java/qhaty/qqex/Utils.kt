@@ -1,5 +1,6 @@
 package qhaty.qqex
 
+import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Context
 import android.os.Build
@@ -88,5 +89,7 @@ class ProgressView {
     companion object {
         var progressView: ProgressBar? = null
         var progressText: TextView? = null
+        var dialog: AlertDialog? = null
+        var cirProgress: ProgressBar? = null
     }
 }

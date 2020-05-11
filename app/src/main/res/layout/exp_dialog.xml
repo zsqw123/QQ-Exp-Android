@@ -11,13 +11,17 @@
 
         <ProgressBar
             android:layout_width="0dp"
+            android:id="@+id/cir_progress"
             android:layout_height="40dp"
             android:layout_weight="1" />
 
         <TextView
             android:id="@+id/progress_text"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:textSize="20sp"
+            android:layout_height="wrap_content"
             android:layout_weight="2" />
     </LinearLayout>
 

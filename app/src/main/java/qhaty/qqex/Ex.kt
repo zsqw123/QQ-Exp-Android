@@ -2,6 +2,8 @@ package qhaty.qqex
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.os.Build
+import android.view.View
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.IOException
@@ -24,8 +26,12 @@ class Ex {
         GlobalScope.launch {
             progress = Progress(10, "读取数据库...")
             val dbFileList = GetDB(context).getDataBase()
+            if (dbFileList == null) {
+                progress.msg = "无法读取数据库\n请手动导入"
+                return@launch
+            }
             progress = Progress(50, "导出数据库...")
-            doEx(dbFileList!![0], dbFileList[1], context, keyGenText)
+            doEx(dbFileList[0], dbFileList[1], context, keyGenText)
         }
     }
 
@@ -113,8 +119,19 @@ class Ex {
     private fun onProgressChange(new: Progress) {
         runOnUI {
             try {
-                ProgressView.progressView?.progress = new.progress
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    ProgressView.progressView?.setProgress(new.progress, true)
+                } else {
+                    ProgressView.progressView?.progress = new.progress
+                }
                 ProgressView.progressText?.text = new.msg
+                if (new.progress > 990) {
+                    ProgressView.dialog?.apply {
+                        setCanceledOnTouchOutside(true)
+                        setCancelable(true)
+                    }
+                    ProgressView.cirProgress?.visibility = View.GONE
+                }
             } catch (e: java.lang.Exception) {
             }
         }
