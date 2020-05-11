@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         Kotpref.init(this)
         Markwon.create(this).setMarkdown(info, infoT)
+
         qq_mine_edit.setText(Data.meQQ)
         qq_exp_edit.setText(Data.friendQQ)
         key_edit.setText(Data.key)
@@ -31,9 +32,10 @@ class MainActivity : AppCompatActivity() {
         exp_bt.setOnClickListener {
             Data.meQQ = qq_mine_edit.text.toString()
             Data.friendQQ = qq_exp_edit.text.toString()
-            if (key_edit.text.toString().isNotBlank()) {
-                Data.key = key_edit.text.toString()
-                if (Data.key.isNotBlank() && Data.meQQ.isNotBlank() && Data.friendQQ.isNotBlank()) {
+            Data.key = key_edit.text.toString()
+
+            if (key_edit.text.toString().isNotBlank()) {//手动输入Key
+                if (Data.meQQ.isNotBlank() && Data.friendQQ.isNotBlank()) {
                     askForPermissions(Permission.WRITE_EXTERNAL_STORAGE) {
                         if (it.isAllGranted(Permission.WRITE_EXTERNAL_STORAGE)) {
                             expDialog().show()
@@ -50,7 +52,6 @@ class MainActivity : AppCompatActivity() {
                             Ex().startEx(this, keyGenText)
                         }
                     }
-                    return@setOnClickListener
                 }
 
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
