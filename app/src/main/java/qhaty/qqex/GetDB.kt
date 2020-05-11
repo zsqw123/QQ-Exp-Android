@@ -8,7 +8,7 @@ import java.io.File
 import java.lang.Exception
 
 class GetDB(private var context: Context) {
-    suspend fun getDataBase(): List<File>? {
+    fun getDataBase(): List<File>? {
         val qqNumber = Data.meQQ
         val dir = context.getExternalFilesDir(null)
         val dbFileNew: File
@@ -33,9 +33,9 @@ class GetDB(private var context: Context) {
         }
     }
 
-    private suspend fun copyUseRoot() {
-        withContext(Dispatchers.IO) {
-            try {
+    private fun copyUseRoot() {
+        try {
+            if (Data.hasRoot)
                 if (Shell.SU.available()) {
                     val dir = context.getExternalFilesDir(null)!!
                     val qqPkg = "com.tencent.mobileqq"
@@ -46,9 +46,8 @@ class GetDB(private var context: Context) {
                         "cp -f /data/data/$qqPkg/databases/slowtable_${Data.meQQ}.db ${dir.absolutePath}/slowtable_${Data.meQQ}.db"
                     Shell.SU.run(cmd0, cmd1, cmd2)
                 }
-            } catch (e: Exception) {
-                runOnUI { context.toast("无root权限!") }
-            }
+        } catch (e: Exception) {
+            runOnUI { context.toast("无root权限!") }
         }
     }
 }
