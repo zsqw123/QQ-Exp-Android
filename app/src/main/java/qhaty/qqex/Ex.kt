@@ -4,7 +4,10 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import android.view.View
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -14,8 +17,6 @@ import kotlin.experimental.xor
 import kotlin.properties.Delegates
 
 class Ex {
-    private val allChat = arrayListOf<HashMap<String, Any>>()
-    private val allChatDecode = arrayListOf<HashMap<String, Any>>()
     private var htmlStr = "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head>"
     private var saveStr = ""
     private var progress: Progress by Delegates.observable(
@@ -23,7 +24,7 @@ class Ex {
     ) { _, _, new -> onProgressChange(new) }
 
     fun startEx(context: Context, keyGenText: String? = null) {
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.launch(Dispatchers.Default) {
             progress = Progress(10, "读取数据库...")
             val dbFileList: List<File>? = GetDB(context).getDataBase()
             if (dbFileList == null) {
@@ -36,31 +37,27 @@ class Ex {
     }
 
     private suspend fun doEx(libFileNew: File, libFileOld: File?, context: Context, keyGenText: String? = null) {
-        withContext(Dispatchers.IO) {
-            val old = async(Dispatchers.IO) { if (libFileOld != null) addDByPath(libFileOld) }
-            val new = async(Dispatchers.IO) { addDByPath(libFileNew, keyGenText) }
-            old.await()
-            progress = Progress(120, "解析数据库...")
-            new.await()
-            progress = Progress(200, progress.msg)
-            chatsDecode()
-            toHtml()
+        withContext(Dispatchers.Default) {
+            val old =
+                withContext(Dispatchers.IO) { if (libFileOld != null) addDByPath(libFileOld) else null }
+            val new = withContext(Dispatchers.IO) { addDByPath(libFileNew, keyGenText) }
+            if (old != null) new += old
+            progress = Progress(200, "解析数据库...")
+            toHtml(withContext(Dispatchers.Default) { chatsDecode(new) })
             progress = Progress(progress.progress, "保存网页到本地中...")
-            val toDownload = async(Dispatchers.IO) { textToDownload(context, Data.friendQQ, htmlStr) }
-            val toData = async(Dispatchers.IO) { textToAppData(context, Data.friendQQ, saveStr) }
-            toData.await()
-            toDownload.await()
+            textToDownload(context, Data.friendQQ, htmlStr)
+            textToAppData(context, Data.friendQQ, saveStr)
             progress = Progress(1000, "保存成功")
         }
     }
 
-    private fun addDByPath(libFile: File, keyGenText: String? = null) {
+    private fun addDByPath(libFile: File, keyGenText: String? = null): ArrayList<HashMap<String, Any>> {
+        val chats = arrayListOf<HashMap<String, Any>>()
+        val sql = SQLiteDatabase.openDatabase(libFile.absolutePath, null, 0)
+        val friendOrTroop = if (Data.friendOrGroup) "friend" else "troop"
+        val sqlDo = "SELECT _id,msgData,msgtype,senderuin,time FROM mr_${friendOrTroop}_" +
+                "${encodeMD5(Data.friendQQ).toUpperCase(Locale.ROOT)}_New"
         try {
-            println(libFile.absolutePath)
-            val sql = SQLiteDatabase.openDatabase(libFile.absolutePath, null, 0)
-            val friendOrTroop = if (Data.friendOrGroup) "friend" else "troop"
-            val sqlDo = "SELECT _id,msgData,msgtype,senderuin,time FROM mr_${friendOrTroop}_" +
-                    "${encodeMD5(Data.friendQQ).toUpperCase(Locale.ROOT)}_New"
             val cursor = sql.rawQuery(sqlDo, null)
             if (cursor.count > 1) cursor.moveToFirst()
             var first = true
@@ -71,21 +68,22 @@ class Ex {
                 single["type"] = cursor.getInt(2)
                 single["sender"] = cursor.getString(3)
                 single["time"] = cursor.getInt(4)
-                allChat += single
+                chats += single
                 if (first && keyGen) {
                     dbLastData = single["data"] as ByteArray
                     decodeKey(keyGenText!!)
                     first = false
                 }
             } while (cursor.moveToNext())
-            sql.close()
             cursor.close()
         } catch (e: java.lang.Exception) {
         }
-
+        sql.close()
+        return chats
     }
 
-    private fun chatsDecode() {
+    private fun chatsDecode(allChat: ArrayList<HashMap<String, Any>>): ArrayList<HashMap<String, Any>> {
+        val allChatDecode = arrayListOf<HashMap<String, Any>>()
         val single = hashMapOf<String, Any>()
         val allCount = allChat.size
         progress = Progress(progress.progress, "数据库解码...")
@@ -101,9 +99,10 @@ class Ex {
             }
         }
         allChatDecode.sortBy { it["time"] as Int }
+        return allChatDecode
     }
 
-    private fun toHtml() {
+    private fun toHtml(allChatDecode: ArrayList<HashMap<String, Any>>) {
         progress = Progress(progress.progress, "导出网页...")
         for (i in allChatDecode.indices) {
             val item = allChatDecode[i]
