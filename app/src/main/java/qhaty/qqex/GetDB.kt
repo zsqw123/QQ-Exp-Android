@@ -5,6 +5,7 @@ import com.jaredrummler.android.shell.Shell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.lang.Exception
 
 class GetDB(private var context: Context) {
     suspend fun getDataBase(): List<File>? {
@@ -34,15 +35,19 @@ class GetDB(private var context: Context) {
 
     private suspend fun copyUseRoot() {
         withContext(Dispatchers.IO) {
-            if (Shell.SU.available()) {
-                val dir = context.getExternalFilesDir(null)!!
-                val qqPkg = "com.tencent.mobileqq"
-                val cmd0 = "am force-stop $qqPkg"
-                val cmd1 =
-                    "cp -f /data/data/$qqPkg/databases/${Data.meQQ}.db ${dir.absolutePath}/${Data.meQQ}.db"
-                val cmd2 =
-                    "cp -f /data/data/$qqPkg/databases/slowtable_${Data.meQQ}.db ${dir.absolutePath}/slowtable_${Data.meQQ}.db"
-                Shell.SU.run(cmd0, cmd1, cmd2)
+            try {
+                if (Shell.SU.available()) {
+                    val dir = context.getExternalFilesDir(null)!!
+                    val qqPkg = "com.tencent.mobileqq"
+                    val cmd0 = "am force-stop $qqPkg"
+                    val cmd1 =
+                        "cp -f /data/data/$qqPkg/databases/${Data.meQQ}.db ${dir.absolutePath}/${Data.meQQ}.db"
+                    val cmd2 =
+                        "cp -f /data/data/$qqPkg/databases/slowtable_${Data.meQQ}.db ${dir.absolutePath}/slowtable_${Data.meQQ}.db"
+                    Shell.SU.run(cmd0, cmd1, cmd2)
+                }
+            } catch (e: Exception) {
+                runOnUI { context.toast("无root权限!") }
             }
         }
     }

@@ -1,6 +1,7 @@
 package qhaty.qqex
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.view.View
 import com.afollestad.assent.Permission
 import com.afollestad.assent.askForPermissions
 import com.chibatching.kotpref.Kotpref
+import com.jaredrummler.android.shell.Shell
 import io.noties.markwon.Markwon
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.exp_dialog.view.*
@@ -27,16 +29,20 @@ class MainActivity : Activity() {
         qq_mine_edit.setText(Data.meQQ)
         qq_exp_edit.setText(Data.friendQQ)
         key_edit.setText(Data.key)
+        val mainContext = this
         exp_bt.setOnClickListener {
             Data.meQQ = qq_mine_edit.text.toString()
             Data.friendQQ = qq_exp_edit.text.toString()
             if (key_edit.text.toString().isNotBlank()) {
                 Data.key = key_edit.text.toString()
-                if (Data.key.isNotBlank() || Data.meQQ.isNotBlank() || Data.friendQQ.isNotBlank()) Ex().startEx(this)
+                if (Data.key.isNotBlank() && Data.meQQ.isNotBlank() && Data.friendQQ.isNotBlank()) {
+                    expDialog().show()
+                    Ex().startEx(this)
+                }
             } else {
                 val keyGenText: String = last_chat_edit.text.toString()
-                if (keyGenText.toByteArray().size < 15) toast("填写的聊天长度不足")
-                else {
+                if (keyGenText.toByteArray().size >= 15) {
+                    expDialog().show()
                     Ex().startEx(this, keyGenText)
                     return@setOnClickListener
                 }
@@ -52,6 +58,8 @@ class MainActivity : Activity() {
                                         val tm = context.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
                                         val method: Method = tm.javaClass.getMethod("getImei")
                                         Data.key = method.invoke(tm) as String
+                                        expDialog().show()
+                                        Ex().startEx(mainContext, keyGenText)
                                     } catch (e: Exception) {
                                     }
                                 }
@@ -62,6 +70,21 @@ class MainActivity : Activity() {
                     toast("自动获取key不适用于Android Q以上,请手动获取")
                 }
             }
+        }
+        set_bt.setOnClickListener {
+            val items = arrayOf("群消息导出", "使用root权限")
+            alertDialog {
+                setMultiChoiceItems(items, booleanArrayOf(false, false)) { _, which, isChecked ->
+                    when (which) {
+                        0 -> Data.friendOrGroup = !isChecked
+                        1 -> {
+                            if (isChecked) {
+                                if (Shell.SU.available()) Data.hasRoot = true
+                            } else Data.hasRoot = false
+                        }
+                    }
+                }
+            }.show()
         }
     }
 
@@ -88,16 +111,23 @@ class MainActivity : Activity() {
 
 例如我的qq号为12345 则这两个文件为:
 >12345.db  
-slowtable_123456.db
+slowtable_123456.db  
+
+[github](https://github.com/zsqw123/QQ-Exp-Android)  
         """
         }
     }
 }
 
-fun Context.expDialog() = alertDialog {
-    setCancelable(false)
-    val view = View.inflate(this@expDialog, R.layout.exp_dialog, null)
-    setView(view)
-    ProgressView.progressView = view.progress_bar
-    ProgressView.progressText = view.progress_text
-}.apply { setCanceledOnTouchOutside(false) }
+fun Context.expDialog(): AlertDialog {
+    val dialog = alertDialog {
+        setCancelable(false)
+        val view = View.inflate(this@expDialog, R.layout.exp_dialog, null)
+        setView(view)
+        ProgressView.progressView = view.progress_bar
+        ProgressView.cirProgress = view.cir_progress
+        ProgressView.progressText = view.progress_text
+    }.apply { setCanceledOnTouchOutside(false) }
+    ProgressView.dialog = dialog
+    return dialog
+}
