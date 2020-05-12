@@ -52,6 +52,7 @@ class MainActivity : AppCompatActivity() {
                             Ex().startEx(this, keyGenText)
                         }
                     }
+                    return@setOnClickListener
                 }
 
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
@@ -110,7 +111,7 @@ class MainActivity : AppCompatActivity() {
 
 ## 获得key 以下二选一
 
-1. 软件自动获取 (授予读取设备信息权限 Android Q及以上失效 必须用户手动输入)(其实就是IMEI码 手机拨号界面输入*#06#即可获得)
+1. 软件自动获取 (授予读取设备信息权限可自动获得 其实就是IMEI码 手机拨号界面输入*#06#即可获得)
 2. 给好友发一条6个汉字或更长的消息（即便消息没有发送成功也可）  
 并将这段消息填入计算key的界面中得到key 复制key记录下来  
 
