@@ -14,6 +14,10 @@ import com.jaredrummler.android.shell.Shell
 import io.noties.markwon.Markwon
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.exp_dialog.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import splitties.alertdialog.alertDialog
 import splitties.alertdialog.okButton
 import java.lang.reflect.Method
@@ -86,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         set_bt.setOnClickListener {
             val items = arrayOf("群消息导出", "使用root权限")
             alertDialog {
-                setMultiChoiceItems(items, booleanArrayOf(false, false)) { _, which, isChecked ->
+                setMultiChoiceItems(items, booleanArrayOf(!Data.friendOrGroup, Data.hasRoot)) { _, which, isChecked ->
                     when (which) {
                         0 -> Data.friendOrGroup = !isChecked
                         1 -> {
@@ -97,6 +101,37 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }.show()
+        }
+        root_key_bt.setOnClickListener {
+            if (!Data.hasRoot) toast("请到设置允许root")
+            else {
+                val items = arrayOf("Key1", "Key2", "Key3")
+                alertDialog {
+                    setSingleChoiceItems(items, Data.keyType) { _, which ->
+                        when (which) {
+                            0 -> Data.keyType = 0
+                            1 -> Data.keyType = 1
+                            2 -> Data.keyType = 2
+                        }
+                        GlobalScope.launch(Dispatchers.Main) {
+                            val a = withContext(Dispatchers.Default) {
+                                try {
+                                    getKeyUseRoot(mainContext)
+                                    return@withContext 0
+                                } catch (e: java.lang.Exception) {
+                                    return@withContext 1
+                                }
+                            }
+                            if (a == 1) {
+                                toast("获取失败 请检查是否安装QQ")
+                            } else {
+                                toast("已获取key")
+                            }
+                            key_edit.setText(Data.key)
+                        }
+                    }
+                }.show()
+            }
         }
     }
 

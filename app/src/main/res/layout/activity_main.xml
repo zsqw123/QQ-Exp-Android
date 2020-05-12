@@ -31,7 +31,8 @@
         android:id="@+id/last_chat_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="最后一句聊天(六个汉字以上,选填)" />
+        android:hint="最后一句聊天(六个汉字以上,选填)"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -45,6 +46,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="导出" />
+
+        <Button
+            android:id="@+id/root_key_bt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Root获取Key" />
 
         <Button
             android:id="@+id/set_bt"
