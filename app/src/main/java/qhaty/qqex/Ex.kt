@@ -8,6 +8,7 @@ import android.view.View
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.IOException
+import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.experimental.xor
@@ -72,19 +73,16 @@ class Ex {
                 null
             } ?: return null
             if (cursor.count > 1) cursor.moveToFirst()
-            var first = true
-            val keyGen: Boolean = keyGenText != null
+            if (keyGenText != null) {
+                dbLastData = cursor.getBlob(1)
+                decodeKey(keyGenText)
+            }
             do {
                 val data = cursor.getBlob(1)
                 val type = cursor.getInt(2)
                 val sender = cursor.getString(3)
                 val time = cursor.getInt(4)
                 chats += CodedChat(time, type, sender, data)
-                if (first && keyGen) {
-                    dbLastData = data as ByteArray
-                    decodeKey(keyGenText!!)
-                    first = false
-                }
             } while (cursor.moveToNext())
             cursor.close()
         } catch (e: java.lang.Exception) {
@@ -101,9 +99,8 @@ class Ex {
             for (i in allChat.indices) {
                 val time = allChat[i].time
                 val type = allChat[i].type
-                val sender = fix(other = allChat[i].sender)
+                val sender = fix(allChat[i].sender)
                 val data = fix(allChat[i].msg)
-//                println(single["data"])
                 allChatDecode += Chat(time, type, sender, data)
                 if (i % 20 == 0) {
                     progress = Progress(((i.toFloat() / allCount) * 500 + 200).toInt(), progress.msg)
@@ -178,12 +175,8 @@ fun getDateString(date: Int): String {
     return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(date.toLong() * 1000L))
 }
 
-fun fix(msgData: ByteArray? = null, other: String? = null): String {
-    if (msgData != null) {
-        var rowByte = byteArrayOf()
-        for (i in msgData.indices) rowByte += msgData[i] xor ord(Data.key[i % Data.key.length]).toByte()
-        return String(rowByte, charset("UTF-8"))
-    } else if (other != null) {
+fun fix(other: String? = null): String {
+    if (other != null) {
         var str = ""
         for (i in other.indices) str += chr(ord(other[i]) xor ord(Data.key[i % Data.key.length]))
         return str
@@ -191,8 +184,17 @@ fun fix(msgData: ByteArray? = null, other: String? = null): String {
     return ""
 }
 
+fun fix(msgData: ByteArray?): String {
+    if (msgData != null) {
+        var rowByte = byteArrayOf()
+        for (i in msgData.indices) rowByte += (msgData[i] xor ord(Data.key[i % Data.key.length]).toByte())
+        return String(rowByte)
+    }
+    return ""
+}
+
 fun htmlStrByType(type: Int): String = when (type) {
-    -2000 -> "[图片]"
+    -2000 -> "<font color=\"#30b9d4\">[图片]</font>"
     -2002 -> "<font color=\"#30b9d4\">[语音]</font>"
     -2005 -> "<font color=\"#30b9d4\">[文件]</font>"
     -2009 -> "<font color=\"#30b9d4\">[QQ电话]</font>"
@@ -214,7 +216,12 @@ fun decodeKey(str: String): String {
     var restK = ""
     for (i in 4 until keyS.length) {
         for (j in 0..i) realK += keyS[j]
-        for (j in i..2 * i) catchError { nextK += keyS[j] }
+        for (j in i..2 * i) {
+            try {
+                nextK += keyS[j]
+            } catch (e: java.lang.Exception) {
+            }
+        }
         if (2 * i < keyS.length) for (j in 2 * i until keyS.length) restK += keyS[j]
         var flagLoop = true
         for (j in realK.indices) {
@@ -227,14 +234,9 @@ fun decodeKey(str: String): String {
         }
         if (flagLoop) break
     }
+    Data.key = realK
     return realK
 }
 
 fun ord(char: Char) = char.toInt()
 fun chr(int: Int) = int.toChar()
-fun catchError(method: () -> Unit) {
-    try {
-        method()
-    } catch (e: java.lang.Exception) {
-    }
-}
