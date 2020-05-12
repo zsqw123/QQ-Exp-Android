@@ -3,6 +3,7 @@ package qhaty.qqex
 import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -12,10 +13,12 @@ import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.*
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
-import kotlin.properties.Delegates
+
 
 fun Context.toast(str: String? = null, id: Int? = null) {
     Toast.makeText(this, str ?: this.resources.getText(id!!), Toast.LENGTH_SHORT).show()
@@ -44,39 +47,31 @@ fun encodeMD5(text: String): String {
     return ""
 }
 
-fun textToDownload(context: Context, fileName: String, text: String) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        val values = ContentValues()
-        values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/QQEX")
-        val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-        if (uri != null) {
-            val outputStream = context.contentResolver.openOutputStream(uri)
-            outputStream?.write(text.toByteArray())
-        }
-    } else {
-        @Suppress("DEPRECATION")
-        val path = "${Environment.getExternalStorageDirectory().absolutePath}/${Environment.DIRECTORY_DOWNLOADS}/QQEX"
-        if (!File(path).exists()) File(path).mkdirs()
-        val file = File("$path/$fileName")
+suspend fun textToAppDownload(context: Context, fileName: String, text: String) {
+    withContext(Dispatchers.IO) {
+        val path = context.getExternalFilesDir("Save")
+        val file = File("$path/$fileName.html")
         if (file.exists()) file.delete()
         file.createNewFile()
         FileOutputStream(file).write(text.toByteArray())
     }
+
 }
 
-fun textToAppData(context: Context, fileName: String, text: String) {
-    val path = context.getExternalFilesDir("Data")
-    if (path != null) {
-        if (!path.exists()) path.mkdirs()
-    } else {
-        runOnUI { context.toast("无内置储存") }
-        return
+suspend fun textToAppData(context: Context, fileName: String, text: String) {
+    withContext(Dispatchers.IO) {
+        val path = context.getExternalFilesDir("Data")
+        if (path != null) {
+            if (!path.exists()) path.mkdirs()
+        } else {
+            runOnUI { context.toast("无内置储存") }
+            return@withContext
+        }
+        val file = File("${path.absolutePath}/$fileName")
+        if (file.exists()) file.delete()
+        file.createNewFile()
+        file.writeText(text)
     }
-    val file = File("${path.absolutePath}/$fileName")
-    if (file.exists()) file.delete()
-    file.createNewFile()
-    file.writeText(text)
 }
 
 fun runOnUI(a: () -> Unit) {
@@ -93,3 +88,19 @@ class ProgressView {
         var cirProgress: ProgressBar? = null
     }
 }
+
+data class CodedChat(var time: Int, var type: Int, var sender: String, var msg: ByteArray) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as CodedChat
+        if (!msg.contentEquals(other.msg)) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return msg.contentHashCode()
+    }
+}
+
+data class Chat(var time: Int, var type: Int, var sender: String, var msg: String)
