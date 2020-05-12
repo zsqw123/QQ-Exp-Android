@@ -9,4 +9,5 @@ object Data : KotprefModel() {
     var friendOrGroup by booleanPref(true) // true is friend
     var needPic by booleanPref(false)
     var hasRoot by booleanPref(false)
+    var keyType by intPref(0)
 }

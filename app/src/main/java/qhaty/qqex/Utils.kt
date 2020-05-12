@@ -1,15 +1,11 @@
 package qhaty.qqex
 
 import android.app.AlertDialog
-import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import com.jaredrummler.android.shell.Shell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -104,3 +100,36 @@ data class CodedChat(var time: Int, var type: Int, var sender: String, var msg: 
 }
 
 data class Chat(var time: Int, var type: Int, var sender: String, var msg: String)
+
+fun getKeyUseRoot(context: Context) {
+    if (Data.hasRoot) {
+        if (Shell.SU.available()) {
+            val dir = context.getExternalFilesDir("qqxml")!!
+            val qqPkg = "com.tencent.mobileqq"
+            val cmd1 =
+                "cp -f /data/data/$qqPkg/shared_prefs/appcenter_mobileinfo.xml ${dir.absolutePath}/1.xml"
+            val cmd2 =
+                "cp -f /data/data/$qqPkg/shared_prefs/DENGTA_META.xml ${dir.absolutePath}/2.xml"
+            Shell.SU.run(cmd1, cmd2)
+            val regex0 = Regex("""imei">.*?</""")
+            val regex1 = Regex("""ress">.*?</""")
+            val regex2 = Regex("""IMEI_DENGTA">.*?</""")
+            val file1 = File("${dir.absolutePath}/1.xml")
+            val file2 = File("${dir.absolutePath}/2.xml")
+            when (Data.keyType) {
+                1 -> {
+                    val text = file1.readText()
+                    Data.key = regex0.find(text)!!.value.replace("""imei">""", "").replace("""</""", "")
+                }
+                0 -> {
+                    val text = file1.readText()
+                    Data.key = regex1.find(text)!!.value.replace("""ress">""", "").replace("""</""", "")
+                }
+                2 -> {
+                    val text = file2.readText()
+                    Data.key = regex2.find(text)!!.value.replace("""IMEI_DENGTA">""", "").replace("""</""", "")
+                }
+            }
+        }
+    }
+}
