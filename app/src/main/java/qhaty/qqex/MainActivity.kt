@@ -19,7 +19,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import splitties.alertdialog.alertDialog
+import splitties.alertdialog.negativeButton
 import splitties.alertdialog.okButton
+import splitties.alertdialog.positiveButton
 import java.lang.reflect.Method
 
 class MainActivity : AppCompatActivity() {
@@ -33,11 +35,7 @@ class MainActivity : AppCompatActivity() {
         qq_exp_edit.setText(Data.friendQQ)
         key_edit.setText(Data.key)
         val mainContext = this
-        exp_bt.setOnClickListener {
-            Data.meQQ = qq_mine_edit.text.toString()
-            Data.friendQQ = qq_exp_edit.text.toString()
-            Data.key = key_edit.text.toString()
-
+        fun startEx() {
             if (key_edit.text.toString().isNotBlank()) {//手动输入Key
                 if (Data.meQQ.isNotBlank() && Data.friendQQ.isNotBlank()) {
                     askForPermissions(Permission.WRITE_EXTERNAL_STORAGE) {
@@ -56,7 +54,7 @@ class MainActivity : AppCompatActivity() {
                             Ex().startEx(this, keyGenText)
                         }
                     }
-                    return@setOnClickListener
+                    return
                 }
 
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
@@ -86,6 +84,23 @@ class MainActivity : AppCompatActivity() {
                     toast("自动获取key不适用于Android Q以上,请手动获取")
                 }
             }
+        }
+        exp_bt.setOnClickListener {
+            Data.meQQ = qq_mine_edit.text.toString()
+            Data.friendQQ = qq_exp_edit.text.toString()
+            Data.key = key_edit.text.toString()
+            if (checkDBCopied(mainContext)) {
+                alertDialog("提示", "检测到已导入过聊天数据文件，是否删除重建") {
+                    positiveButton(R.string.yes) {
+                        GlobalScope.launch(Dispatchers.Main) {
+                            withContext(Dispatchers.IO) { delDB(mainContext) }
+                            startEx()
+                        }
+                    }
+                    negativeButton(R.string.no) { startEx() }
+                }.show()
+            }
+
         }
         set_bt.setOnClickListener {
             val items = arrayOf("群消息导出", "使用root权限")
