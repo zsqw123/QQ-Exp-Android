@@ -8,7 +8,6 @@ import android.view.View
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.IOException
-import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.experimental.xor
@@ -103,7 +102,7 @@ class Ex {
                 val data = fix(allChat[i].msg)
                 allChatDecode += Chat(time, type, sender, data)
                 if (i % 20 == 0) {
-                    progress = Progress(((i.toFloat() / allCount) * 500 + 200).toInt(), progress.msg)
+                    progress = Progress(((i.toFloat() / allCount) * 100 + 200).toInt(), progress.msg)
                 }
             }
             allChatDecode.sortBy { it.time }
@@ -117,16 +116,20 @@ class Ex {
             var htmlStr = "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head>"
             for (i in allChatDecode.indices) {
                 val item = allChatDecode[i]
-                saveStr += item.msg
                 try {
+                    val htmlByTypeStr = htmlStrByType(item.type)
+                    val msg = if (htmlByTypeStr != " ") htmlByTypeStr else {
+                        saveStr += item.msg
+                        item.msg
+                    }
                     htmlStr = "$htmlStr<font color=\"blue\">${getDateString(item.time)}" +
                             "</font>-----<font color=\"green\">${item.sender}</font>" +
-                            "</br>${htmlStrByType(item.type) + item.msg}</br></br>"
+                            "</br>$msg</br></br>"
                 } catch (e: Exception) {
                     continue
                 }
                 if (i % 20 == 0) {
-                    progress = Progress(((i.toFloat() / allChatDecode.size) * 250 + 700).toInt(), progress.msg)
+                    progress = Progress(((i.toFloat() / allChatDecode.size) * 650 + 300).toInt(), progress.msg)
                 }
             }
             html = htmlStr
@@ -203,7 +206,9 @@ fun htmlStrByType(type: Int): String = when (type) {
     -2039 -> "<font color=\"#30b9d4\">[厘米秀]</font>"
     -3009 -> "<font color=\"#30b9d4\">[文件]</font>"
     -5012 -> "<font color=\"#30b9d4\">[戳一戳]</font>"
-    else -> ""
+    -1000 -> " "
+    -1051 -> " "
+    else -> "<font color=\"#30b9d4\">[其他消息]</font>"
 }
 
 var dbLastData = byteArrayOf()
