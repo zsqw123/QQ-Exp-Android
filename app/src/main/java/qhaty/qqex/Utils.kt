@@ -2,16 +2,20 @@ package qhaty.qqex
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat.startActivity
+import androidx.core.content.FileProvider
 import com.jaredrummler.android.shell.Shell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
@@ -49,7 +53,11 @@ suspend fun textToAppDownload(context: Context, fileName: String, text: String) 
         val file = File("$path/$fileName.html")
         if (file.exists()) file.delete()
         file.createNewFile()
-        FileOutputStream(file).write(text.toByteArray())
+        file.writeText(text)
+        withContext(Dispatchers.Main) {
+            sendToViewHtml(context, file)
+            context.toast("文件保存至:Android/data/qhaty.qqex/files/Save")
+        }
     }
 
 }
@@ -132,4 +140,17 @@ fun getKeyUseRoot(context: Context) {
             }
         }
     }
+}
+
+fun sendToViewHtml(context: Context, file: File) {
+    val viewIntent = Intent(Intent.ACTION_VIEW)
+    viewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+        viewIntent.setDataAndType(Uri.fromFile(file), "text/html")
+    } else {
+        val htmlUri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", file)
+        viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        viewIntent.setDataAndType(htmlUri, "text/html")
+    }
+    startActivity(context, viewIntent, null)
 }
