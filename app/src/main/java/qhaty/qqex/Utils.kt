@@ -16,6 +16,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.lang.Exception
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
@@ -153,4 +154,30 @@ fun sendToViewHtml(context: Context, file: File) {
         viewIntent.setDataAndType(htmlUri, "text/html")
     }
     startActivity(context, viewIntent, null)
+}
+
+fun checkDBCopied(context: Context): Boolean {
+    return try {
+        val dir = context.getExternalFilesDir(null)
+        File("${dir!!.absolutePath}/${Data.meQQ}.db").exists()
+    } catch (e: Exception) {
+        context.toast("无内置储存 无法读取数据")
+        false
+    }
+}
+
+suspend fun delDB(context: Context) {
+    try {
+        withContext(Dispatchers.IO) {
+            val dir = context.getExternalFilesDir(null)
+            val old = File("${dir!!.absolutePath}/slowtable_${Data.meQQ}.db")
+            val new = File("${dir.absolutePath}/${Data.meQQ}.db")
+            if (new.exists()) new.delete()
+            if (old.exists()) old.delete()
+        }
+    } catch (e: Exception) {
+        withContext(Dispatchers.Main) {
+            context.toast("无内置储存 无法读取数据")
+        }
+    }
 }
