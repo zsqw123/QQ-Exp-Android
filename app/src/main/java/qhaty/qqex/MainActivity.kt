@@ -1,28 +1,14 @@
 package qhaty.qqex
 
-import android.app.AlertDialog
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.telephony.TelephonyManager
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.assent.Permission
 import com.afollestad.assent.askForPermissions
 import com.chibatching.kotpref.Kotpref
-import com.jaredrummler.android.shell.Shell
 import io.noties.markwon.Markwon
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.exp_dialog.view.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import splitties.alertdialog.alertDialog
-import splitties.alertdialog.negativeButton
-import splitties.alertdialog.okButton
-import splitties.alertdialog.positiveButton
-import java.lang.reflect.Method
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +20,8 @@ class MainActivity : AppCompatActivity() {
         qq_mine_edit.setText(Data.meQQ)
         qq_exp_edit.setText(Data.friendQQ)
         key_edit.setText(Data.key)
-        val mainContext = this
+        mainContext = this
+        mainActivity = this
         fun startEx() {
             if (key_edit.text.toString().isNotBlank()) {//手动输入Key
                 if (Data.meQQ.isNotBlank() && Data.friendQQ.isNotBlank()) {
@@ -57,100 +44,29 @@ class MainActivity : AppCompatActivity() {
                     return
                 }
 
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                    alertDialog("未填写key", "请确保授予权限自动获取key\n\n本项目已在GitHub开源,请您放心授予") {
-                        okButton {
-                            askForPermissions(Permission.READ_PHONE_STATE) { a ->
-                                if (a.isAllDenied(Permission.READ_PHONE_STATE)) {
-                                    context.toast("请手动授予权限自动获取key")
-                                } else {
-                                    try {
-                                        val tm = context.getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-                                        val method: Method = tm.javaClass.getMethod("getImei")
-                                        Data.key = method.invoke(tm) as String
-                                        askForPermissions(Permission.WRITE_EXTERNAL_STORAGE) { result ->
-                                            if (result.isAllGranted(Permission.WRITE_EXTERNAL_STORAGE)) {
-                                                expDialog().show()
-                                                Ex().startEx(mainContext)
-                                            }
-                                        }
-                                    } catch (e: Exception) {
-                                    }
-                                }
-                            }
-                        }
-                    }.show()
-                } else {
-                    toast("自动获取key不适用于Android Q以上,请手动获取")
-                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) getImeiDialog().show()
+                else toast("自动获取key不适用于Android Q以上,请手动获取")
             }
         }
         exp_bt.setOnClickListener {
             Data.meQQ = qq_mine_edit.text.toString()
             Data.friendQQ = qq_exp_edit.text.toString()
             Data.key = key_edit.text.toString()
-            if (checkDBCopied(mainContext)) {
-                alertDialog("提示", "检测到已导入过聊天数据文件，是否删除重建") {
-                    positiveButton(R.string.yes) {
-                        GlobalScope.launch(Dispatchers.Main) {
-                            withContext(Dispatchers.IO) { delDB(mainContext) }
-                            startEx()
-                        }
-                    }
-                    negativeButton(R.string.no) { startEx() }
-                }.show()
-            }
-
+            val dialog = expWithRebuildDialog { startEx() }
+            if (dialog == null) startEx() else dialog.show()
         }
         set_bt.setOnClickListener {
-            val items = arrayOf("群消息导出", "使用root权限")
-            alertDialog {
-                setMultiChoiceItems(items, booleanArrayOf(!Data.friendOrGroup, Data.hasRoot)) { _, which, isChecked ->
-                    when (which) {
-                        0 -> Data.friendOrGroup = !isChecked
-                        1 -> {
-                            if (isChecked) {
-                                if (Shell.SU.available()) Data.hasRoot = true
-                            } else Data.hasRoot = false
-                        }
-                    }
-                }
-            }.show()
+            setDialog().show()
         }
         root_key_bt.setOnClickListener {
             if (!Data.hasRoot) toast("请到设置允许root")
-            else {
-                val items = arrayOf("Key1", "Key2", "Key3")
-                alertDialog {
-                    setSingleChoiceItems(items, Data.keyType) { _, which ->
-                        when (which) {
-                            0 -> Data.keyType = 0
-                            1 -> Data.keyType = 1
-                            2 -> Data.keyType = 2
-                        }
-                        GlobalScope.launch(Dispatchers.Main) {
-                            val a = withContext(Dispatchers.Default) {
-                                try {
-                                    getKeyUseRoot(mainContext)
-                                    return@withContext 0
-                                } catch (e: java.lang.Exception) {
-                                    return@withContext 1
-                                }
-                            }
-                            if (a == 1) {
-                                toast("获取失败 请检查是否安装QQ")
-                            } else {
-                                toast("已获取key")
-                            }
-                            key_edit.setText(Data.key)
-                        }
-                    }
-                }.show()
-            }
+            else rootGetKeyDialog().show()
         }
     }
 
     companion object {
+        var mainContext: Context? = null
+        var mainActivity: AppCompatActivity? = null
         private val infoT by lazy {
             """# QQ聊天记录导出
 
@@ -161,8 +77,9 @@ class MainActivity : AppCompatActivity() {
 
 ## 获得key 以下二选一
 
-1. 软件自动获取 (授予读取设备信息权限可自动获得 其实就是IMEI码 手机拨号界面输入*#06#即可获得)
-2. 给好友发一条6个汉字或更长的消息（即便消息没有发送成功也可）  
+1. Android P及以下 软件自动获取 (授予读取设备信息权限可自动获得 其实就是IMEI码 手机拨号界面输入*#06#即可获得)
+2. root自动获取
+3. (暂时不行)给好友发一条6个汉字或更长的消息（即便消息没有发送成功也可）  
 并将这段消息填入计算key的界面中得到key 复制key记录下来
 
 ### 手动导入
@@ -177,17 +94,4 @@ slowtable_123456.db
         """
         }
     }
-}
-
-fun Context.expDialog(): AlertDialog {
-    val dialog = alertDialog {
-        setCancelable(false)
-        val view = View.inflate(this@expDialog, R.layout.exp_dialog, null)
-        setView(view)
-        ProgressView.progressView = view.progress_bar
-        ProgressView.cirProgress = view.cir_progress
-        ProgressView.progressText = view.progress_text
-    }.apply { setCanceledOnTouchOutside(false) }
-    ProgressView.dialog = dialog
-    return dialog
 }

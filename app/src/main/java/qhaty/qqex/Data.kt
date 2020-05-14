@@ -11,3 +11,7 @@ object Data : KotprefModel() {
     var hasRoot by booleanPref(false)
     var keyType by intPref(0)
 }
+
+object QQNickNameParse : KotprefModel() {
+    val qqNickNameSet by stringSetPref()
+}

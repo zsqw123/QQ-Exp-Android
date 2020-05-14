@@ -83,7 +83,15 @@ fun runOnUI(a: () -> Unit) {
     GlobalScope.launch(Dispatchers.Main) { a() }
 }
 
-data class Progress(var progress: Int, var msg: String)
+data class Progress(var progress: Int, var msg: String) {
+    fun change(m: String) = change(msg = m)
+    fun change(progress: Int = this.progress, msg: String = this.msg) {
+        this.progress = progress
+        this.msg = msg
+        Ex.onProgressChange(this)
+    }
+}
+
 
 class ProgressView {
     companion object {
