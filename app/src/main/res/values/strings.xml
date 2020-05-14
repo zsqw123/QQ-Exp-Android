@@ -2,4 +2,5 @@
     <string name="app_name">qqex</string>
     <string name="yes">是</string>
     <string name="no">否</string>
+    <string name="set_qq_index">设置QQ号昵称索引</string>
 </resources>
