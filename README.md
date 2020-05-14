@@ -42,4 +42,4 @@ slowtable_123456.db
 
 #### 打赏(
 
-![alipay](pay.jpg)  
+[![alipay](pay.jpg)](https://qr.alipay.com/fkx05866rmc3tvpisucbsef)  
