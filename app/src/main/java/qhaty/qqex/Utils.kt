@@ -122,6 +122,7 @@ fun getKeyUseRoot(context: Context) {
     if (Data.hasRoot) {
         if (Shell.SU.available()) {
             val dir = context.getExternalFilesDir("qqxml")!!
+            if (!dir.exists()) dir.mkdirs()
             val qqPkg = "com.tencent.mobileqq"
             val cmd1 =
                 "cp -f /data/data/$qqPkg/shared_prefs/appcenter_mobileinfo.xml ${dir.absolutePath}/1.xml"
