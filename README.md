@@ -1,6 +1,7 @@
-# QQ聊天记录导出(进度89%)
+# QQ聊天记录导出(进度92%)
 
-![image](https://img.shields.io/badge/build-passing-brightgreen.svg) [![GitHub license](https://img.shields.io/github/license/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/blob/master/LICENSE) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/zsqw123/QQ-Exp-Android) ![GitHub All Releases](https://img.shields.io/github/downloads/zsqw123/QQ-Exp-Android/total) [![GitHub stars](https://img.shields.io/github/stars/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/stargazers) [![GitHub forks](https://img.shields.io/github/forks/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/network)
+![image](https://img.shields.io/badge/build-passing-brightgreen.svg) [![GitHub license](https://img.shields.io/github/license/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/blob/master/LICENSE) [![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21)  
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/zsqw123/QQ-Exp-Android) ![GitHub All Releases](https://img.shields.io/github/downloads/zsqw123/QQ-Exp-Android/total) [![GitHub stars](https://img.shields.io/github/stars/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/stargazers) [![GitHub forks](https://img.shields.io/github/forks/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/network)
 
 ## 获取数据库 以下二选一
 
@@ -36,7 +37,7 @@ slowtable_123456.db
 #### others
 
 > 1. 理论上可以做导出图片，但是一旦导出图片的话，导出的就是一个文件夹，而不是一个文件，出于这种考虑，暂时不考虑导出图片，只考虑导出出文字
-> 2. QQ密钥存储位置/data/com.tencent.mobileqq/shared_prefs/appcenter_mobileinfo.xml的imei或wifi_mac_address字段
+> 2. QQ密钥存储位置/data/data/com.tencent.mobileqq/shared_prefs/appcenter_mobileinfo.xml的imei或wifi_mac_address字段
 > 3. 生成HTML文件在sdcard/Android/data/qhaty.qqex/files/Save
 
 #### 打赏(

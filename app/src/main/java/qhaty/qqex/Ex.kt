@@ -22,15 +22,15 @@ class Ex {
 
     fun startEx(context: Context, keyGenText: String? = null) {
         GlobalScope.launch {
-            progress = Progress(10, "读取数据库...")
+            progress.change(10, "读取数据库...")
             val dbFileTask = async { GetDB(context).getDataBase() }
             if (dbFileTask.await() == null) {
-                progress = Progress(progress.progress, "无法读取数据库\n请手动导入")
+                progress.change(1000, "无法读取数据库\n请手动导入")
                 return@launch
             }
 
             val dbFileList = dbFileTask.await()!!
-            progress = Progress(50, "导出数据库...")
+            progress.change(50, "导出数据库...")
             val allChat: ArrayList<CodedChat>
             val new = async(Dispatchers.IO) { addDByPath(dbFileList[0], keyGenText) }
             val old = if (dbFileList.size > 1) async(Dispatchers.IO) { addDByPath(dbFileList[1]) } else null
@@ -50,7 +50,7 @@ class Ex {
 
             progress = Progress(200, "解析数据库...")
             val decodedChat = chatsDecode(allChat)
-            progress = Progress(progress.progress, "保存网页到本地中...")
+            progress.change("保存网页到本地中...")
             toHtml(decodedChat)
             textToAppDownload(context, Data.friendQQ, html)
             textToAppData(context, Data.friendQQ, saveStr)
@@ -94,16 +94,14 @@ class Ex {
         return withContext(Dispatchers.Default) {
             val allChatDecode = arrayListOf<Chat>()
             val allCount = allChat.size
-            progress = Progress(progress.progress, "数据库解码...")
+            progress.change("数据库解码...")
             for (i in allChat.indices) {
                 val time = allChat[i].time
                 val type = allChat[i].type
                 val sender = fix(allChat[i].sender)
                 val data = fix(allChat[i].msg)
                 allChatDecode += Chat(time, type, sender, data)
-                if (i % 20 == 0) {
-                    progress = Progress(((i.toFloat() / allCount) * 100 + 200).toInt(), progress.msg)
-                }
+                if (i % 20 == 0) progress.change(((i.toFloat() / allCount) * 100 + 200).toInt())
             }
             allChatDecode.sortBy { it.time }
             return@withContext allChatDecode
@@ -112,7 +110,7 @@ class Ex {
 
     private suspend fun toHtml(allChatDecode: ArrayList<Chat>) {
         withContext(Dispatchers.Default) {
-            progress = Progress(progress.progress, "导出网页...")
+            progress.change("导出网页...")
             var htmlStr = "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head>"
             for (i in allChatDecode.indices) {
                 val item = allChatDecode[i]
@@ -128,31 +126,31 @@ class Ex {
                 } catch (e: Exception) {
                     continue
                 }
-                if (i % 20 == 0) {
-                    progress = Progress(((i.toFloat() / allChatDecode.size) * 650 + 300).toInt(), progress.msg)
-                }
+                if (i % 20 == 0) progress.change(((i.toFloat() / allChatDecode.size) * 650 + 300).toInt())
             }
             html = htmlStr
         }
     }
 
-    private fun onProgressChange(new: Progress) {
-        runOnUI {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    ProgressView.progressView?.setProgress(new.progress, true)
-                } else {
-                    ProgressView.progressView?.progress = new.progress
-                }
-                ProgressView.progressText?.text = new.msg
-                if (new.progress > 990) {
-                    ProgressView.dialog?.apply {
-                        setCanceledOnTouchOutside(true)
-                        setCancelable(true)
+    companion object {
+        fun onProgressChange(new: Progress) {
+            runOnUI {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        ProgressView.progressView?.setProgress(new.progress, true)
+                    } else {
+                        ProgressView.progressView?.progress = new.progress
                     }
-                    ProgressView.cirProgress?.visibility = View.GONE
+                    ProgressView.progressText?.text = new.msg
+                    if (new.progress > 990) {
+                        ProgressView.dialog?.apply {
+                            setCanceledOnTouchOutside(true)
+                            setCancelable(true)
+                        }
+                        ProgressView.cirProgress?.visibility = View.GONE
+                    }
+                } catch (e: java.lang.Exception) {
                 }
-            } catch (e: java.lang.Exception) {
             }
         }
     }
