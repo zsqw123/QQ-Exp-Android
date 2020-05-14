@@ -8,6 +8,7 @@ import com.afollestad.assent.Permission
 import com.afollestad.assent.askForPermissions
 import com.chibatching.kotpref.Kotpref
 import io.noties.markwon.Markwon
+import jackmego.com.jieba_android.JiebaSegmenter
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -16,6 +17,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         Kotpref.init(this)
         Markwon.create(this).setMarkdown(info, infoT)
+        JiebaSegmenter.init(applicationContext)
 
         qq_mine_edit.setText(Data.meQQ)
         qq_exp_edit.setText(Data.friendQQ)
