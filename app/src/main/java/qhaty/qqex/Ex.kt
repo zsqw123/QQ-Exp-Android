@@ -97,18 +97,18 @@ class Ex {
             val qqSavedSet: Set<String> = QQNickNameParse.dataSet
             val qqMap = hashMapOf<String, String>()
             val regex1 = Regex(""".*?--QQEX--""")
-            val regex2 = Regex("""--QQEX--.*?""")
+            val regex2 = Regex("""--QQEX--(.*?)-""")
             qqSavedSet.forEach {
-                val r0 = it.replace("--QQS--", "").replace("--QQE--", "")
+                val r0 = it.replace("--QQS--", "").replace("-QQE--", "")
                 val qq = regex1.find(r0)?.value?.replace("--QQEX--", "")
-                val name = regex2.find(r0)?.value?.replace("--QQEX--", "")
-                if (qq != null && name != null) qqMap[qq] = name
+                val name = regex2.find(r0)?.value?.replace("--QQEX--", "")?.replace("-", "")
+                if (!qq.isNullOrBlank() && !name.isNullOrBlank()) qqMap[qq] = name
             }
             progress.change("数据库解码...")
             for (i in allChat.indices) {
                 val time = allChat[i].time
                 val type = allChat[i].type
-                var fixedQQ = fix(allChat[i].sender)
+                var fixedQQ: String = fix(allChat[i].sender)
                 for ((k, v) in qqMap) fixedQQ = fixedQQ.replace(k, v)
                 val sender = fixedQQ
                 val data = fix(allChat[i].msg)
