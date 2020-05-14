@@ -83,6 +83,8 @@ fun Context.rootGetKeyDialog(): AlertDialog = alertDialog {
             1 -> Data.keyType = 1
             2 -> Data.keyType = 2
         }
+    }
+    okButton {
         GlobalScope.launch(Dispatchers.Main) {
             val a = withContext(Dispatchers.Default) {
                 try {
@@ -92,11 +94,7 @@ fun Context.rootGetKeyDialog(): AlertDialog = alertDialog {
                     return@withContext 1
                 }
             }
-            if (a == 1) {
-                toast("获取失败 请检查是否安装QQ")
-            } else {
-                toast("已获取key")
-            }
+            if (a == 1) toast("获取失败 请检查是否安装QQ") else toast("已获取key")
             mainActivity?.key_edit?.setText(Data.key)
         }
     }
