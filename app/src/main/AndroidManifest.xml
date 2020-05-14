@@ -20,6 +20,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".WordActivity"
+            android:theme="@style/Theme.AppCompat.DayNight" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="qhaty.qqex.provider"
