@@ -94,11 +94,23 @@ class Ex {
         return withContext(Dispatchers.Default) {
             val allChatDecode = arrayListOf<Chat>()
             val allCount = allChat.size
+            val qqSavedSet: Set<String> = QQNickNameParse.dataSet
+            val qqMap = hashMapOf<String, String>()
+            val regex1 = Regex(""".*?--QQEX--""")
+            val regex2 = Regex("""--QQEX--.*?""")
+            qqSavedSet.forEach {
+                val r0 = it.replace("--QQS--", "").replace("--QQE--", "")
+                val qq = regex1.find(r0)?.value?.replace("--QQEX--", "")
+                val name = regex2.find(r0)?.value?.replace("--QQEX--", "")
+                if (qq != null && name != null) qqMap[qq] = name
+            }
             progress.change("数据库解码...")
             for (i in allChat.indices) {
                 val time = allChat[i].time
                 val type = allChat[i].type
-                val sender = fix(allChat[i].sender)
+                var fixedQQ = fix(allChat[i].sender)
+                for ((k, v) in qqMap) fixedQQ = fixedQQ.replace(k, v)
+                val sender = fixedQQ
                 val data = fix(allChat[i].msg)
                 allChatDecode += Chat(time, type, sender, data)
                 if (i % 20 == 0) progress.change(((i.toFloat() / allCount) * 100 + 200).toInt())

@@ -4,6 +4,10 @@ import android.app.AlertDialog
 import android.content.Context
 import android.telephony.TelephonyManager
 import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.assent.Permission
 import com.afollestad.assent.askForPermissions
@@ -48,6 +52,10 @@ fun Context.setDialog(): AlertDialog = alertDialog {
             }
         }
     }
+    val bt = Button(context)
+    bt.text = getString(R.string.set_qq_index)
+    bt.setOnClickListener { setNickNameDialog().show() }
+    setView(bt)
 }
 
 fun Context.getImeiDialog(): AlertDialog = alertDialog(
@@ -100,16 +108,68 @@ fun Context.rootGetKeyDialog(): AlertDialog = alertDialog {
     }
 }
 
-fun Context.expWithRebuildDialog(callback: () -> Unit): AlertDialog? {
-    return if (checkDBCopied(mainContext!!)) {
-        alertDialog("提示", "检测到已导入过聊天数据文件，是否删除重建") {
-            positiveButton(R.string.yes) {
-                GlobalScope.launch(Dispatchers.Main) {
-                    withContext(Dispatchers.IO) { delDB(mainContext!!) }
-                    callback.invoke()
-                }
+fun Context.expWithRebuildDialog(callback: () -> Unit): AlertDialog? = if (checkDBCopied(mainContext!!)) {
+    alertDialog("提示", "检测到已导入过聊天数据文件，是否删除重建") {
+        positiveButton(R.string.yes) {
+            GlobalScope.launch(Dispatchers.Main) {
+                withContext(Dispatchers.IO) { delDB(mainContext!!) }
+                callback.invoke()
             }
-            negativeButton(R.string.no) { callback.invoke() }
         }
-    } else null
+        negativeButton(R.string.no) { callback.invoke() }
+    }
+} else null
+
+fun Context.setNickNameDialog(): AlertDialog = alertDialog(
+    "QQ号索引", "填入QQ号和昵称导出时可以将QQ号转为昵称\n不建议填入影响HTML识别的特殊字符 < / 什么的"
+) {
+    val context = this@setNickNameDialog
+    val layout = LinearLayout(context)
+    layout.layoutParams =
+        ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    layout.orientation = LinearLayout.VERTICAL
+    val etQQ = EditText(context)
+    val etName = EditText(context)
+    val button = Button(context)
+    val buttonD = Button(context)
+    layout.addView(etQQ)
+    layout.addView(etName)
+    layout.addView(button)
+    layout.addView(buttonD)
+    val match = LinearLayout.LayoutParams.MATCH_PARENT
+    val wrap = LinearLayout.LayoutParams.WRAP_CONTENT
+    etQQ.layoutParams = LinearLayout.LayoutParams(match, wrap)
+    etQQ.hint = "QQ"
+    etName.layoutParams = LinearLayout.LayoutParams(match, wrap)
+    etName.hint = "昵称"
+    button.layoutParams = LinearLayout.LayoutParams(match, wrap)
+    button.text = "添加索引"
+    buttonD.text = "删除索引"
+    buttonD.layoutParams = LinearLayout.LayoutParams(match, wrap)
+    fun getStr(): String {
+        val etqqText = etQQ.text.toString()
+        val etNameText = etName.text.toString()
+        var text = ""
+        when {
+            etqqText.length < 5 -> toast("您的QQ小于五位数")
+            etNameText.isBlank() -> toast("昵称为空")
+            else -> text = "--QQS--$etqqText--QQEX--$etNameText--QQE--"
+        }
+        return text
+    }
+    button.setOnClickListener {
+        val str = getStr()
+        if (getStr() != "") {
+            val add: Boolean = QQNickNameParse.dataSet.add(str)
+            if (add) toast("已添加该索引") else toast("该索引已存在")
+        }
+    }
+    buttonD.setOnClickListener {
+        val str = getStr()
+        if (getStr() != "") {
+            val remove: Boolean = QQNickNameParse.dataSet.remove(str)
+            if (remove) toast("已删除该索引") else toast("无该索引")
+        }
+    }
+    setView(layout)
 }

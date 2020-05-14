@@ -13,5 +13,5 @@ object Data : KotprefModel() {
 }
 
 object QQNickNameParse : KotprefModel() {
-    val qqNickNameSet by stringSetPref()
+    val dataSet by stringSetPref()
 }
