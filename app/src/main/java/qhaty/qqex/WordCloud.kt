@@ -9,17 +9,21 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.children
 import jackmego.com.jieba_android.JiebaSegmenter
 import kotlinx.android.synthetic.main.activity_wordcloud.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.w3c.dom.Text
 import java.io.File
 import java.util.*
 import kotlin.math.cos
+import kotlin.math.log
 import kotlin.math.log2
 import kotlin.math.sin
 
@@ -27,6 +31,36 @@ class WordActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_wordcloud)
+        var r = 0
+        var g = 0
+        var b = 0
+
+        class Seek(val value: Int) : SeekBar.OnSeekBarChangeListener {
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                when (value) {
+                    1 -> r = progress
+                    2 -> g = progress
+                    3 -> b = progress
+                }
+                color_preview.setBackgroundColor(Color.rgb(r, g, b))
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                for (i in word_cloud_view.children) {
+                    if (i is TextView) {
+                        i.setTextColor(Color.rgb(r, g, b))
+                    }
+                }
+            }
+        }
+        color_seek_r.setOnSeekBarChangeListener(Seek(1))
+        color_seek_g.setOnSeekBarChangeListener(Seek(2))
+        color_seek_b.setOnSeekBarChangeListener(Seek(3))
+//        scale_seek.setOnSeekBarChangeListener(SeekListener(stop = { word_cloud_view.refresh(scale_seek.progress / 4) }))
+//        text_size_seek.setOnSeekBarChangeListener(
+//            SeekListener(stop = { word_cloud_view.refresh(logInt = (scale_seek.progress.toFloat() / 10)) })
+//        )
         val path = getExternalFilesDir("Data")
         if (path != null) {
             if (!path.exists()) path.mkdirs()
@@ -84,14 +118,12 @@ class WordActivity : AppCompatActivity() {
     }
 }
 
-
-/**
- * Created by chao on 2019/2/15.
- */
+//参考 https://github.com/rome753/WordCloudView
 class WordCloudView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
     FrameLayout(context, attrs, defStyleAttr), View.OnClickListener {
     private var random = Random()
     private var placed = HashSet<View>()
+    private var words = mutableListOf<Word>()
     private val spiralPoints = genSpiral()
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         for (i in 0 until childCount) {
@@ -140,13 +172,26 @@ class WordCloudView @JvmOverloads constructor(context: Context, attrs: Attribute
     var params = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     var rotates = floatArrayOf(0f, 90f, 270f)
 
-    fun addTextView(word: String?, weight: Int) {
+    fun addTextView(word: String, weight: Int, scale: Int = 1, logInt: Float = 2.0f) {
         val tv = TextView(context)
         tv.text = word
-        tv.textSize = 4 * log2(weight.toFloat())
+        words.add(Word(word, weight))
+        tv.textSize = 4 * scale * log(logInt, weight.toFloat())
         tv.rotation = rotates[random.nextInt(rotates.size)]
-        tv.setOnClickListener(this)
+//        tv.setOnClickListener(this)
         addView(tv, params)
+    }
+
+    fun refresh(scale: Int = 1, logInt: Float = 2.0f) {
+        removeAllViews()
+        val tv = TextView(context)
+        for (i in words) {
+            tv.text = i.str
+            tv.textSize = 4 * scale * log(logInt, i.weight.toFloat())
+            tv.rotation = rotates[random.nextInt(rotates.size)]
+//            tv.setOnClickListener(this)
+            addView(tv, params)
+        }
     }
 
     var lastText: TextView? = null
@@ -171,6 +216,14 @@ class WordCloudView @JvmOverloads constructor(context: Context, attrs: Attribute
             t += 0.1
         }
         return res
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val w = MeasureSpec.getSize(widthMeasureSpec)
+        super.onMeasure(
+            MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY)
+        )
     }
 
     companion object {
