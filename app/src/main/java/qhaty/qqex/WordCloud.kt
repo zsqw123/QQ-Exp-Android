@@ -6,14 +6,13 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import jackmego.com.jieba_android.JiebaSegmenter
-import jackmego.com.jieba_android.RequestCallback
+import kotlinx.android.synthetic.main.activity_wordcloud.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -21,13 +20,13 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
 import kotlin.math.cos
+import kotlin.math.log2
 import kotlin.math.sin
 
 class WordActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val wordCloudView = WordCloudView(this)
-        setContentView(wordCloudView)
+        setContentView(R.layout.activity_wordcloud)
         val path = getExternalFilesDir("Data")
         if (path != null) {
             if (!path.exists()) path.mkdirs()
@@ -36,42 +35,48 @@ class WordActivity : AppCompatActivity() {
                 val chatText = file.readText()
                 val wordList = mutableListOf<Word>()
                 val copy = mutableListOf<Word>()
-                JiebaSegmenter.getJiebaSegmenterSingleton().getDividedStringAsync(chatText
-                    , object : RequestCallback<ArrayList<String>> {
-                        override fun onSuccess(result: ArrayList<String>?) {
-                            GlobalScope.launch {
-                                withContext(Dispatchers.Default) {
-                                    result?.forEach {
-                                        var parse = false
-                                        for (i in wordList) {
-                                            if (i.str == it) i.weight = i.weight + 1
-                                            parse = true
-                                            break
-                                        }
-                                        if (!parse) wordList += Word(it)
-                                    }
-                                    wordList.sortByDescending { it.weight }
-                                    for (i in wordList) {
-//                                        copy += wordList[i]
-//                                        if (i > 200) break
-                                        println(i.str + " " + i.weight.toString())
-
-                                    }
-                                    for (i in copy) {
-                                        println(i.str + " " + i.weight.toString())
-                                    }
+                val result = arrayListOf<String>()
+                JiebaSegmenter.getJiebaSegmenterSingleton().process(chatText, JiebaSegmenter.SegMode.INDEX).forEach {
+                    result += it.word
+                }
+                GlobalScope.launch {
+                    val stopWords: List<String> = getStopWords()
+                    withContext(Dispatchers.Default) {
+                        for (it in result) {
+                            if (!checkStrChinese(it)) continue
+                            var jump = false
+                            for (stopWord in stopWords) {
+                                if (it == stopWord) {
+                                    jump = true
+                                    break
                                 }
-//                                withContext(Dispatchers.Main) {
-//                                    copy.forEach {
-//                                        wordCloudView.addTextView(it.str, it.weight)
-//                                    }
-//                                }
                             }
-
+                            if (jump) continue
+                            var parse = false
+                            for (i in wordList) {
+                                if (i.str == it) {
+                                    i.weight = i.weight + 1
+                                    parse = true
+                                    break
+                                }
+                            }
+                            if (!parse) wordList += Word(it)
                         }
-
-                        override fun onError(errorMsg: String?) {}
-                    })
+                        wordList.sortByDescending { it.weight }
+                        for (i in wordList.indices) {
+                            copy += wordList[i]
+                            if (i > 200) break
+                        }
+//                                    for (i in copy) {
+//                                        println(i.str + " " + i.weight.toString())
+//                                    }
+                    }
+                    withContext(Dispatchers.Main) {
+                        copy.forEach {
+                            word_cloud_view.addTextView(it.str, it.weight)
+                        }
+                    }
+                }
             }
         } else {
             toast("无内置储存")
@@ -85,23 +90,21 @@ class WordActivity : AppCompatActivity() {
  */
 class WordCloudView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
     FrameLayout(context, attrs, defStyleAttr), View.OnClickListener {
-    var random = Random()
-    var words = arrayListOf<String>()
-    var placed = HashSet<View>()
+    private var random = Random()
+    private var placed = HashSet<View>()
+    private val spiralPoints = genSpiral()
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         for (i in 0 until childCount) {
             val v = getChildAt(i)
             if (placed.contains(v)) continue
             val w = v.measuredWidth
             val h = v.measuredHeight
-            var pivotX = width / 3 + random.nextInt(width / 3)
-            var pivotY = height / 3 + random.nextInt(height / 3)
-            val spiral = generateSpiral()
-            for (p in spiral) {
-                pivotX += p.x
-                pivotY += p.y
-                Log.d("chao", "place $pivotX,$pivotY")
-                val r1 = getVisualRect(pivotX, pivotY, w, h, v.rotation)
+            var centerX = width / 3 + random.nextInt(width / 3)
+            var centerY = height / 3 + random.nextInt(height / 3)
+            for (p in spiralPoints) {
+                centerX += p.x
+                centerY += p.y
+                val r1 = getVisualRect(centerX, centerY, w, h, v.rotation)
                 var isOverlap = false
                 for (pv in placed) {
                     val r2 = getVisualRect(pv)
@@ -111,8 +114,7 @@ class WordCloudView @JvmOverloads constructor(context: Context, attrs: Attribute
                     }
                 }
                 if (!isOverlap) {
-                    Log.d("chao", "placed")
-                    val r = getRect(pivotX, pivotY, w, h)
+                    val r = getRect(centerX, centerY, w, h)
                     v.layout(r.left, r.top, r.right, r.bottom)
                     break
                 }
@@ -121,14 +123,13 @@ class WordCloudView @JvmOverloads constructor(context: Context, attrs: Attribute
         }
     }
 
-    fun getRect(pivotX: Int, pivotY: Int, width: Int, height: Int) =
+    private fun getRect(pivotX: Int, pivotY: Int, width: Int, height: Int) =
         Rect(pivotX - width / 2, pivotY - height / 2, pivotX + width / 2, pivotY + height / 2)
 
-    fun getVisualRect(pivotX: Int, pivotY: Int, width: Int, height: Int, rotation: Float) =
+    private fun getVisualRect(pivotX: Int, pivotY: Int, width: Int, height: Int, rotation: Float) =
         if (rotation != 0f) getRect(pivotX, pivotY, height, width) else getRect(pivotX, pivotY, width, height)
 
-
-    fun getVisualRect(v: View): Rect = getVisualRect(
+    private fun getVisualRect(v: View): Rect = getVisualRect(
         (v.right + v.left) / 2,
         (v.bottom + v.top) / 2,
         v.measuredWidth,
@@ -136,21 +137,13 @@ class WordCloudView @JvmOverloads constructor(context: Context, attrs: Attribute
         v.rotation
     )
 
-    //    public void setWords(String[] words) {
-    //        this.words = words;
-    //        placed.clear();
-    //        removeAllViews();
-    //        for(final String word : words) {
-    //            addTextView(word);
-    //        }
-    //    }
     var params = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     var rotates = floatArrayOf(0f, 90f, 270f)
 
     fun addTextView(word: String?, weight: Int) {
         val tv = TextView(context)
         tv.text = word
-        tv.textSize = weight.toFloat()
+        tv.textSize = 4 * log2(weight.toFloat())
         tv.rotation = rotates[random.nextInt(rotates.size)]
         tv.setOnClickListener(this)
         addView(tv, params)
@@ -159,27 +152,22 @@ class WordCloudView @JvmOverloads constructor(context: Context, attrs: Attribute
     var lastText: TextView? = null
     override fun onClick(v: View) {
         if (v is TextView) {
-            Log.e("chao", "click " + v.text)
             v.setTextColor(Color.RED)
-            if (lastText != null) {
-                lastText!!.setTextColor(Color.BLACK)
-            }
+            lastText?.setTextColor(Color.BLACK)
             lastText = v
         }
     }
 
-    private fun generateSpiral(): List<Point> {
+    private fun genSpiral(): List<Point> {
         val res: MutableList<Point> = ArrayList()
-        var a = 10
-        val w = 5
-        val sita = Math.PI
+        var v = 10 //线速度控制了大小，越大走得越快螺线形状越大
+        val w = 5 //角速度控制了疏密，越小越稀疏，单位时间内旋转少
         var t = 0.0
         while (t < 10 * Math.PI) {
-            val x = java.lang.Double.valueOf(a * cos(w * t + sita)).toInt()
-            val y = java.lang.Double.valueOf(a * sin(w * t + sita)).toInt()
-            a += 1
+            val x = (v * t * cos(w * t)).toInt()
+            val y = (v * t * sin(w * t)).toInt()
+            v += 1
             res.add(Point(x, y))
-//            Log.e("chao", "$x, $y")
             t += 0.1
         }
         return res
