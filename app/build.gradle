@@ -10,8 +10,8 @@ android {
         applicationId "qhaty.qqex"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 200513
-        versionName "1.2"
+        versionCode 200515
+        versionName "1.3"
     }
 
     buildTypes {

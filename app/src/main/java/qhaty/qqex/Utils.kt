@@ -28,6 +28,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 fun Context.toast(str: String? = null, id: Int? = null) {
@@ -245,6 +247,7 @@ fun checkStrChinese(name: String): Boolean {
 fun saveWordCloud(context: Context, view: View) {
     GlobalScope.launch(Dispatchers.Default) {
         val bitmap = view.getBitmapCut()
+        val date = SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA).format(Date())
         // 保存bitmap
         @Suppress("DEPRECATION")
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
@@ -255,7 +258,7 @@ fun saveWordCloud(context: Context, view: View) {
             withContext(Dispatchers.IO) {
                 var file: File? = null
                 try {
-                    file = File(galleryPath, "QQEX_${Data.friendQQ}.jpg")
+                    file = File(galleryPath, "QQEX_${Data.friendQQ}${date}.jpg")
                     if (!file.exists()) {
                         file.parentFile!!.mkdirs()
                         file.createNewFile()
@@ -285,7 +288,7 @@ fun saveWordCloud(context: Context, view: View) {
         } else { //Android Q把文件插入到系统图库
             val contentValues = ContentValues().apply {
                 put(MediaStore.Images.Media.TITLE, Data.friendQQ)
-                put(MediaStore.Images.Media.DISPLAY_NAME, "QQEX_${Data.friendQQ}.jpg")
+                put(MediaStore.Images.Media.DISPLAY_NAME, "QQEX_${Data.friendQQ}${date}.jpg")
                 put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
                 put(MediaStore.Images.Media.IS_PENDING, 1)
                 put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)

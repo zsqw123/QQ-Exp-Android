@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
 import jackmego.com.jieba_android.JiebaSegmenter
 import kotlinx.android.synthetic.main.activity_wordcloud.*
+import kotlinx.android.synthetic.main.activity_wordcloud.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -55,12 +56,7 @@ class WordActivity : AppCompatActivity() {
         color_seek_r.setOnSeekBarChangeListener(Seek(1))
         color_seek_g.setOnSeekBarChangeListener(Seek(2))
         color_seek_b.setOnSeekBarChangeListener(Seek(3))
-        save_bt.setOnClickListener {
-            val kuan = save_kuan.text.toString().toInt()
-            val gao = save_gao.text.toString().toInt()
-            word_cloud_view.layoutParams = ViewGroup.LayoutParams(kuan, gao)
-            saveWordCloud(this, word_cloud_view)
-        }
+        save_bt.setOnClickListener { saveWordCloud(this, word_cloud_view) }
         val path = getExternalFilesDir("Data")
         if (path != null) {
             if (!path.exists()) path.mkdirs()
@@ -70,10 +66,12 @@ class WordActivity : AppCompatActivity() {
                 val wordList = mutableListOf<Word>()
                 val copy = mutableListOf<Word>()
                 val result = arrayListOf<String>()
-                JiebaSegmenter.getJiebaSegmenterSingleton().process(chatText, JiebaSegmenter.SegMode.INDEX).forEach {
-                    result += it.word
-                }
+                word_cloud_view_progress?.visibility = View.VISIBLE
                 GlobalScope.launch {
+                    withContext(Dispatchers.Default) {
+                        JiebaSegmenter.getJiebaSegmenterSingleton().process(chatText, JiebaSegmenter.SegMode.INDEX)
+                            .forEach { result += it.word }
+                    }
                     val stopWords: List<String> = getStopWords()
                     withContext(Dispatchers.Default) {
                         for (it in result) {
@@ -99,31 +97,19 @@ class WordActivity : AppCompatActivity() {
                         wordList.sortByDescending { it.weight }
                         for (i in wordList.indices) {
                             copy += wordList[i]
-                            if (i > 200) break
+                            if (i > 300) break
                         }
-//                                    for (i in copy) {
-//                                        println(i.str + " " + i.weight.toString())
-//                                    }
                     }
                     withContext(Dispatchers.Main) {
                         copy.forEach {
                             word_cloud_view.addTextView(it.str, it.weight)
                         }
+                        word_cloud_view_progress?.visibility = View.GONE
                     }
                 }
             }
         } else {
             toast("无内置储存")
-        }
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus){
-            val cloudViewW = word_cloud_view.width
-            val cloudViewH = word_cloud_view.height
-            save_kuan.setText(cloudViewW.toString())
-            save_gao.setText(cloudViewH.toString())
         }
     }
 }
@@ -182,14 +168,28 @@ class WordCloudView @JvmOverloads constructor(context: Context, attrs: Attribute
     private var params = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     private var rotates = floatArrayOf(0f, 90f, 270f)
 
-    fun addTextView(word: String, weight: Int, scale: Int = 1, logFloat: Float = 2f) {
+    fun addTextView(word: String, weight: Int, scale: Int = 1, logFloat: Float = 1.6f) {
         val tv = TextView(context)
         tv.text = word
         words.add(Word(word, weight))
-        tv.textSize = 4 * scale * log(weight.toFloat(), logFloat)
+        tv.textSize = 3F * scale * log(weight.toFloat(), logFloat)
         tv.rotation = rotates[random.nextInt(rotates.size)]
         tv.setOnClickListener(this)
         addView(tv, params)
+    }
+
+    fun scale(scale: Float) {
+        word_cloud_view_progress?.visibility = View.VISIBLE
+        removeAllViews()
+        for (word in words) {
+            val tv = TextView(context)
+            tv.text = word.str
+            tv.textSize = 3F * scale * log(word.weight.toFloat(), 1.6f)
+            tv.rotation = rotates[random.nextInt(rotates.size)]
+            tv.setOnClickListener(this)
+            addView(tv, params)
+        }
+        word_cloud_view_progress?.visibility = View.GONE
     }
 
     override fun onClick(v: View) {
