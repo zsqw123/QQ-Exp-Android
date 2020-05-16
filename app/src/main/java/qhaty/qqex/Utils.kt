@@ -1,34 +1,33 @@
 package qhaty.qqex
 
+import android.R
 import android.app.AlertDialog
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
-import android.util.DisplayMetrics
-import android.view.MotionEvent
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.View
-import android.view.View.OnTouchListener
-import android.view.ViewGroup
 import android.widget.ProgressBar
-import android.widget.SeekBar
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
-import androidx.core.view.children
 import com.jaredrummler.android.shell.Shell
-import kotlinx.android.synthetic.main.activity_wordcloud.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
-import kotlin.math.abs
-import kotlin.math.sqrt
 
 
 fun Context.toast(str: String? = null, id: Int? = null) {
@@ -243,20 +242,102 @@ fun checkStrChinese(name: String): Boolean {
     return res
 }
 
-class SeekListener(
-    private val change: (() -> Unit)? = null,
-    private val stop: (() -> Unit)? = null,
-    private val start: (() -> Unit)? = null
-) : SeekBar.OnSeekBarChangeListener {
-    override fun onStartTrackingTouch(seekBar: SeekBar?) {
-        start?.invoke()
-    }
+fun saveWordCloud(context: Context, view: View) {
+    GlobalScope.launch(Dispatchers.Default) {
+        val bitmap = view.getBitmapCut()
+        // 保存bitmap
+        @Suppress("DEPRECATION")
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            val galleryPath = File(
+                Environment.getExternalStorageDirectory().absolutePath + File.separator + Environment.DIRECTORY_PICTURES
+            )
+            var fos: FileOutputStream? = null
+            withContext(Dispatchers.IO) {
+                var file: File? = null
+                try {
+                    file = File(galleryPath, "QQEX_${Data.friendQQ}.jpg")
+                    if (!file.exists()) {
+                        file.parentFile!!.mkdirs()
+                        file.createNewFile()
+                    }
+                    fos = FileOutputStream(file)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    fos?.close()
+                }
+                val values = ContentValues().apply {
+                    put(MediaStore.Images.Media.DATA, file!!.absolutePath)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.Images.Media.DESCRIPTION, "保存自: QQEX")
+                }
+                val uri: Uri? =
+                    context.contentResolver.insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        values
+                    )
+                val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+                intent.data = uri
+                context.sendBroadcast(intent)
+                withContext(Dispatchers.Main) { context.toast("图片保存成功") }
+            }
+        } else { //Android Q把文件插入到系统图库
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.TITLE, Data.friendQQ)
+                put(MediaStore.Images.Media.DISPLAY_NAME, "QQEX_${Data.friendQQ}.jpg")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+            }
 
-    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        change?.invoke()
-    }
+            val resolver = context.contentResolver
+            val collection = MediaStore.Images.Media
+                .getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val item = resolver.insert(collection, contentValues)
 
-    override fun onStopTrackingTouch(seekBar: SeekBar?) {
-        stop?.invoke()
+            withContext(Dispatchers.IO) {
+                resolver.openFileDescriptor(item!!, "w", null).use { pfd ->
+                    val out = FileOutputStream(pfd!!.fileDescriptor)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+                }
+                contentValues.clear()
+                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(item, contentValues, null, null)
+                withContext(Dispatchers.Main) { context.toast("图片保存成功") }
+            }
+        }
     }
 }
+
+fun View.getBitmapCut(): Bitmap {
+    val v = this
+    val bitmap = Bitmap.createBitmap(v.width, v.height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val bgDrawable = v.background
+    if (bgDrawable != null) {
+        bgDrawable.draw(canvas)
+    } else {
+        canvas.drawColor(Color.WHITE)
+    }
+    v.draw(canvas)
+    return bitmap
+}
+//
+//class SeekListener(
+//    private val change: (() -> Unit)? = null,
+//    private val stop: (() -> Unit)? = null,
+//    private val start: (() -> Unit)? = null
+//) : SeekBar.OnSeekBarChangeListener {
+//    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+//        start?.invoke()
+//    }
+//
+//    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+//        change?.invoke()
+//    }
+//
+//    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+//        stop?.invoke()
+//    }
+//}
