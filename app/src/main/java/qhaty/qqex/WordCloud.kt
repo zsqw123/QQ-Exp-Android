@@ -19,12 +19,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.w3c.dom.Text
 import java.io.File
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.log
-import kotlin.math.log2
 import kotlin.math.sin
 
 class WordActivity : AppCompatActivity() {
@@ -57,10 +55,12 @@ class WordActivity : AppCompatActivity() {
         color_seek_r.setOnSeekBarChangeListener(Seek(1))
         color_seek_g.setOnSeekBarChangeListener(Seek(2))
         color_seek_b.setOnSeekBarChangeListener(Seek(3))
-//        scale_seek.setOnSeekBarChangeListener(SeekListener(stop = { word_cloud_view.refresh(scale_seek.progress / 4) }))
-//        text_size_seek.setOnSeekBarChangeListener(
-//            SeekListener(stop = { word_cloud_view.refresh(logInt = (scale_seek.progress.toFloat() / 10)) })
-//        )
+        save_bt.setOnClickListener {
+            val kuan = save_kuan.text.toString().toInt()
+            val gao = save_gao.text.toString().toInt()
+            word_cloud_view.layoutParams = ViewGroup.LayoutParams(kuan, gao)
+            saveWordCloud(this, word_cloud_view)
+        }
         val path = getExternalFilesDir("Data")
         if (path != null) {
             if (!path.exists()) path.mkdirs()
@@ -116,6 +116,16 @@ class WordActivity : AppCompatActivity() {
             toast("无内置储存")
         }
     }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus){
+            val cloudViewW = word_cloud_view.width
+            val cloudViewH = word_cloud_view.height
+            save_kuan.setText(cloudViewW.toString())
+            save_gao.setText(cloudViewH.toString())
+        }
+    }
 }
 
 //参考 https://github.com/rome753/WordCloudView
@@ -169,37 +179,26 @@ class WordCloudView @JvmOverloads constructor(context: Context, attrs: Attribute
         v.rotation
     )
 
-    var params = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-    var rotates = floatArrayOf(0f, 90f, 270f)
+    private var params = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    private var rotates = floatArrayOf(0f, 90f, 270f)
 
-    fun addTextView(word: String, weight: Int, scale: Int = 1, logInt: Float = 2.0f) {
+    fun addTextView(word: String, weight: Int, scale: Int = 1, logFloat: Float = 2f) {
         val tv = TextView(context)
         tv.text = word
         words.add(Word(word, weight))
-        tv.textSize = 4 * scale * log(logInt, weight.toFloat())
+        tv.textSize = 4 * scale * log(weight.toFloat(), logFloat)
         tv.rotation = rotates[random.nextInt(rotates.size)]
-//        tv.setOnClickListener(this)
+        tv.setOnClickListener(this)
         addView(tv, params)
     }
 
-    fun refresh(scale: Int = 1, logInt: Float = 2.0f) {
-        removeAllViews()
-        val tv = TextView(context)
-        for (i in words) {
-            tv.text = i.str
-            tv.textSize = 4 * scale * log(logInt, i.weight.toFloat())
-            tv.rotation = rotates[random.nextInt(rotates.size)]
-//            tv.setOnClickListener(this)
-            addView(tv, params)
-        }
-    }
-
-    var lastText: TextView? = null
     override fun onClick(v: View) {
         if (v is TextView) {
-            v.setTextColor(Color.RED)
-            lastText?.setTextColor(Color.BLACK)
-            lastText = v
+            for (word in words) {
+                if (v.text == word.str) {
+                    context?.toast(word.str + ":" + word.weight + "次")
+                }
+            }
         }
     }
 
@@ -229,5 +228,16 @@ class WordCloudView @JvmOverloads constructor(context: Context, attrs: Attribute
     companion object {
         fun isOverlap(r1: Rect, r2: Rect): Boolean =
             r1.right >= r2.left && r2.right >= r1.left && r1.bottom >= r2.top && r2.bottom >= r1.top
+    }
+}
+
+class CloudViewGroup @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+    FrameLayout(context, attrs, defStyleAttr) {
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val w = MeasureSpec.getSize(widthMeasureSpec)
+        super.onMeasure(
+            MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY)
+        )
     }
 }
