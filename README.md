@@ -1,4 +1,4 @@
-# QQ聊天记录导出(进度92%)
+# QQ聊天记录导出(进度96%)
 
 ![image](https://img.shields.io/badge/build-passing-brightgreen.svg) [![GitHub license](https://img.shields.io/github/license/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/blob/master/LICENSE) [![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/zsqw123/QQ-Exp-Android) ![GitHub All Releases](https://img.shields.io/github/downloads/zsqw123/QQ-Exp-Android/total) [![GitHub stars](https://img.shields.io/github/stars/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/stargazers) [![GitHub forks](https://img.shields.io/github/forks/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/network)
 
@@ -44,3 +44,4 @@ slowtable_123456.db
 #### 打赏(
 
 [![alipay](pay.jpg)](https://qr.alipay.com/fkx05866rmc3tvpisucbsef)  
+*没有她 我寸步难行*  
