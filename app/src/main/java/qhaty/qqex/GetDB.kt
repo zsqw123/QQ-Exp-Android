@@ -22,7 +22,7 @@ class GetDB(private var context: Context) {
                 if (dbFileOld.exists()) listOf(dbFileNew, dbFileOld) else listOf(dbFileNew)
             } else if (Data.hasRoot) {
                 copyUseRoot()
-                listOf(dbFileNew)
+                if (dbFileOld.exists()) listOf(dbFileNew, dbFileOld) else listOf(dbFileNew)
             } else {
                 runOnUI { context.toast("无法获取聊天数据文件") }
                 null
@@ -47,7 +47,7 @@ class GetDB(private var context: Context) {
                     Shell.SU.run(cmd0, cmd1, cmd2)
                 }
         } catch (e: Exception) {
-            runOnUI { context.toast("无root权限!") }
+            runOnUI { context.toast("无root权限! 若已授权，请忽略") }
         }
     }
 }

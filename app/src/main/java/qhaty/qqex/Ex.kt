@@ -14,8 +14,6 @@ import kotlin.experimental.xor
 import kotlin.properties.Delegates
 
 class Ex {
-    private var saveStr = ""
-    private var html = ""
     private var progress: Progress by Delegates.observable(
         Progress(0, "开始导出...")
     ) { _, _, new -> onProgressChange(new) }
@@ -51,10 +49,12 @@ class Ex {
             progress = Progress(200, "解析数据库...")
             val decodedChat = chatsDecode(allChat)
             progress.change("保存网页到本地中...")
-            toHtml(decodedChat)
-            textToAppDownload(context, Data.friendQQ, html)
-            textToAppData(context, Data.friendQQ, saveStr)
+            toHtml(decodedChat, context)
             progress = Progress(1000, "保存成功")
+            withContext(Dispatchers.Main) {
+                saveHtmlFile?.let { sendToViewHtml(context, it) }
+                context.toast("文件保存至:Android/data/qhaty.qqex/files/Save")
+            }
         }
     }
 
@@ -120,27 +120,37 @@ class Ex {
         }
     }
 
-    private suspend fun toHtml(allChatDecode: ArrayList<Chat>) {
+    private suspend fun toHtml(allChatDecode: ArrayList<Chat>, context: Context?) {
         withContext(Dispatchers.Default) {
             progress.change("导出网页...")
-            var htmlStr = "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head>"
+            val head = "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head>"
+            var appendHtml = ""
+            var appendStr = ""
             for (i in allChatDecode.indices) {
+                if (i == 0) appendHtml += head
                 val item = allChatDecode[i]
                 try {
                     val htmlByTypeStr = htmlStrByType(item.type)
                     val msg = if (htmlByTypeStr != " ") htmlByTypeStr else {
-                        saveStr += item.msg
+                        appendStr += item.msg
                         item.msg
                     }
-                    htmlStr = "$htmlStr<font color=\"blue\">${getDateString(item.time)}" +
+                    appendHtml = "$appendHtml<font color=\"blue\">${getDateString(item.time)}" +
                             "</font>-----<font color=\"green\">${item.sender}</font>" +
                             "</br>$msg</br></br>"
                 } catch (e: Exception) {
                     continue
                 }
-                if (i % 20 == 0) progress.change(((i.toFloat() / allChatDecode.size) * 650 + 300).toInt())
+                if (i % 20 == 0) { //每20条保存一次
+                    if (context != null) {
+                        appendTextToAppDownload(context, Data.friendQQ, appendHtml)
+                        appendHtml = ""
+                        appendTextToAppData(context, Data.friendQQ, appendStr)
+                        appendStr = ""
+                    }
+                    progress.change(((i.toFloat() / allChatDecode.size) * 650 + 300).toInt())
+                }
             }
-            html = htmlStr
         }
     }
 
@@ -153,7 +163,7 @@ class Ex {
                     } else {
                         ProgressView.progressView?.progress = new.progress
                     }
-                    ProgressView.progressText?.text = new.msg
+                    ProgressView.progressText?.text = "${new.msg} ${new.progress.toFloat() / 10}%"
                     if (new.progress > 990) {
                         ProgressView.dialog?.apply {
                             setCanceledOnTouchOutside(true)

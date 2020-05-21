@@ -1,6 +1,5 @@
 package qhaty.qqex
 
-import android.R
 import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Context
@@ -14,7 +13,6 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.view.View
 import android.widget.ProgressBar
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat.startActivity
@@ -24,13 +22,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileOutputStream
+import java.io.*
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.text.SimpleDateFormat
 import java.util.*
-
 
 fun Context.toast(str: String? = null, id: Int? = null) {
     Toast.makeText(this, str ?: this.resources.getText(id!!), Toast.LENGTH_SHORT).show()
@@ -59,34 +55,56 @@ fun encodeMD5(text: String): String {
     return ""
 }
 
-suspend fun textToAppDownload(context: Context, fileName: String, text: String) {
+var saveHtmlFile: File? = null
+suspend fun appendTextToAppDownload(context: Context, fileName: String, text: String) {
     withContext(Dispatchers.IO) {
-        val path = context.getExternalFilesDir("Save")
-        val file = File("$path/$fileName.html")
-        if (file.exists()) file.delete()
-        file.createNewFile()
-        file.writeText(text)
-        withContext(Dispatchers.Main) {
-            sendToViewHtml(context, file)
-            context.toast("文件保存至:Android/data/qhaty.qqex/files/Save")
+        if (saveHtmlFile == null) {
+            val path = context.getExternalFilesDir("Save")
+            saveHtmlFile = File("$path/$fileName.html")
+        }
+        var out: BufferedWriter? = null
+        try {
+            out = BufferedWriter(OutputStreamWriter(FileOutputStream(saveHtmlFile, true)))
+            out.write(text)
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        } finally {
+            try {
+                out?.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
         }
     }
 
 }
 
-suspend fun textToAppData(context: Context, fileName: String, text: String) {
+var saveWordFile: File? = null
+suspend fun appendTextToAppData(context: Context, fileName: String, text: String) {
     withContext(Dispatchers.IO) {
-        val path = context.getExternalFilesDir("Data")
-        if (path != null) {
-            if (!path.exists()) path.mkdirs()
-        } else {
-            runOnUI { context.toast("无内置储存") }
-            return@withContext
+        if (saveWordFile == null) {
+            val path = context.getExternalFilesDir("Data")
+            if (path != null) {
+                if (!path.exists()) path.mkdirs()
+            } else {
+                runOnUI { context.toast("无内置储存") }
+                return@withContext
+            }
+            saveWordFile = File("${path.absolutePath}/$fileName")
         }
-        val file = File("${path.absolutePath}/$fileName")
-        if (file.exists()) file.delete()
-        file.createNewFile()
-        file.writeText(text)
+        var out: BufferedWriter? = null
+        try {
+            out = BufferedWriter(OutputStreamWriter(FileOutputStream(saveWordFile, true)))
+            out.write(text)
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        } finally {
+            try {
+                out?.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
     }
 }
 
