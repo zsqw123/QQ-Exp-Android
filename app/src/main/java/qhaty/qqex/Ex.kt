@@ -120,7 +120,7 @@ class Ex {
         }
     }
 
-    private suspend fun toHtml(allChatDecode: ArrayList<Chat>, context: Context?) {
+    private suspend fun toHtml(allChatDecode: ArrayList<Chat>, context: Context) {
         withContext(Dispatchers.Default) {
             progress.change("导出网页...")
             val head = "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head>"
@@ -142,13 +142,14 @@ class Ex {
                     continue
                 }
                 if (i % 20 == 0) { //每20条保存一次
-                    if (context != null) {
-                        appendTextToAppDownload(context, Data.friendQQ, appendHtml)
-                        appendHtml = ""
-                        appendTextToAppData(context, Data.friendQQ, appendStr)
-                        appendStr = ""
-                    }
+                    appendTextToAppDownload(context, Data.friendQQ, appendHtml)
+                    appendHtml = ""
+                    appendTextToAppData(context, Data.friendQQ, appendStr)
+                    appendStr = ""
                     progress.change(((i.toFloat() / allChatDecode.size) * 650 + 300).toInt())
+                } else if (i == allChatDecode.size - 1) {
+                    appendTextToAppDownload(context, Data.friendQQ, appendHtml)
+                    appendTextToAppData(context, Data.friendQQ, appendStr)
                 }
             }
         }
@@ -198,22 +199,47 @@ fun getDateString(date: Int): String {
     return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(date.toLong() * 1000L))
 }
 
-fun fix(other: String? = null): String {
-    if (other != null) {
-        var str = ""
-        for (i in other.indices) str += chr(ord(other[i]) xor ord(Data.key[i % Data.key.length]))
-        return str
-    }
-    return ""
+fun fix(password: String): String {
+    var str = ""
+    for (i in password.indices) str += chr(ord(password[i]) xor ord(Data.key[i % Data.key.length]))
+    return str
 }
 
-fun fix(msgData: ByteArray?): String {
-    if (msgData != null) {
-        var rowByte = byteArrayOf()
-        for (i in msgData.indices) rowByte += (msgData[i] xor ord(Data.key[i % Data.key.length]).toByte())
-        return String(rowByte)
+fun fix(password: ByteArray): String {
+    var rowByte = byteArrayOf()
+    for (i in password.indices) rowByte += (password[i] xor ord(Data.key[i % Data.key.length]).toByte())
+    return String(rowByte)
+}
+
+fun unfix(input: String, password: ByteArray) {
+    val rowByte = input.toByteArray()
+    var key0 = ""
+    var key1 = ""
+    var key2 = ""
+    var key3 = ""
+    var byte: Byte
+    try {
+        for (i in password.indices) {
+            byte = password[i] xor rowByte[i]
+            key0 += chr(byte.toInt())
+        }
+        for (i in 4 until key0.length) {
+            if (2 * i > key0.length - 1) break
+            for (j in 1..i) key1 += key0[j]
+            for (j in i..2 * i) key2 += key0[j]
+            for (j in 2 * i until key0.length) key3 += key0[j]
+            var flag = true
+            for (j in key1.indices) {
+                if ((j < key2.length && key1[j] != key2[j]) || j < key3.length && key1[j] != key3[j]) {
+                    flag = false
+                    break
+                }
+            }
+            if (flag) break
+        }
+    } catch (e: java.lang.Exception) {
+
     }
-    return ""
 }
 
 fun htmlStrByType(type: Int): String = when (type) {
