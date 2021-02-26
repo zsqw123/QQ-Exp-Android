@@ -33,6 +33,11 @@ slowtable_123456.db
 
 ### 导出结果
 
+**不再支持词云导出!** 因为会影响应用体积, 相关库如下:
+
+- [词云开源库](https://github.com/rome753/WordCloudView)
+- [jieba分词库](https://github.com/452896915/jieba-android)
+
 |  导出网页   | 导出词云  |
 |  ----  | ----  |
 | [![导出网页](r.jpg)](r.jpg)  | [![导出网页](c.jpg)](c.jpg) |

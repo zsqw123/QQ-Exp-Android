@@ -8,7 +8,6 @@ import com.afollestad.assent.Permission
 import com.afollestad.assent.askForPermissions
 import com.chibatching.kotpref.Kotpref
 import io.noties.markwon.Markwon
-import jackmego.com.jieba_android.JiebaSegmenter
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -17,7 +16,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         Kotpref.init(this)
         Markwon.create(this).setMarkdown(info, infoT)
-        JiebaSegmenter.init(applicationContext)
 
         qq_mine_edit.setText(Data.meQQ)
         qq_exp_edit.setText(Data.friendQQ)
@@ -79,10 +77,10 @@ class MainActivity : AppCompatActivity() {
 
 ## 获得key 以下二选一
 
-1. Android P及以下 软件自动获取 (授予读取设备信息权限可自动获得 其实就是IMEI码 手机拨号界面输入*#06#即可获得)
-2. root自动获取
-3. (暂时不行)给好友发一条6个汉字或更长的消息（即便消息没有发送成功也可）  
-并将这段消息填入计算key的界面中得到key 复制key记录下来
+1. 软件自动获取
+2. 想办法获取到这玩意/data/data/com.tencent.mobileqq/files/kc, 里面的内容就是key (通过系统备份有可能可行)
+
+## 附
 
 ### 手动导入
 
@@ -90,9 +88,7 @@ class MainActivity : AppCompatActivity() {
 
 例如我的qq号为12345 则这两个文件为:
 >12345.db  
-slowtable_123456.db  
-
-[github](https://github.com/zsqw123/QQ-Exp-Android)  
+slowtable_123456.db
         """
         }
     }

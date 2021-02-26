@@ -2,7 +2,6 @@ package qhaty.qqex
 
 import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
 import android.telephony.TelephonyManager
 import android.view.View
 import android.view.ViewGroup
@@ -111,10 +110,6 @@ fun Context.rootGetKeyDialog(): AlertDialog = alertDialog {
 
 fun Context.expWithRebuildDialog(callback: () -> Unit): AlertDialog? = if (checkDBCopied(mainContext!!)) {
     alertDialog("提示", "检测到已导入过聊天数据文件，是否删除重建") {
-        val bt = Button(this@expWithRebuildDialog)
-        setView(bt)
-        bt.text = "已导出过聊天记录? 生成词云"
-        bt.setOnClickListener { startActivity(Intent(mainActivity, WordActivity::class.java)) }
         positiveButton(R.string.yes) {
             GlobalScope.launch(Dispatchers.Main) {
                 withContext(Dispatchers.IO) { delDB(mainContext!!) }

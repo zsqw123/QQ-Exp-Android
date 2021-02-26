@@ -39,5 +39,4 @@ dependencies {
     implementation "com.louiscad.splitties:splitties-alertdialog:3.0.0-alpha06"
     implementation 'com.jaredrummler:android-shell:1.0.0'
     implementation 'com.afollestad:assent:2.3.0'
-    implementation 'jackmego.com.jieba_android:jieba_android-release:0.1.0'
 }
