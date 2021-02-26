@@ -2,10 +2,7 @@ package qhaty.qqex
 
 import android.content.Context
 import com.jaredrummler.android.shell.Shell
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
-import java.lang.Exception
 
 class GetDB(private var context: Context) {
     fun getDataBase(): List<File>? {
