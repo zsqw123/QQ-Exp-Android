@@ -8,4 +8,7 @@
     <string name="search">查找</string>
     <string name="your_qq">你的QQ</string>
     <string name="ex_qq">要导出的QQ</string>
+    <string name="not_complete">Not complete yet.</string>
+    <string name="use_root">使用 root 权限</string>
+    <string name="self_key">自定义 key</string>
 </resources>

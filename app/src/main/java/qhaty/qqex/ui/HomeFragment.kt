@@ -5,7 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import qhaty.qqex.databinding.FragHomeBinding
-import qhaty.qqex.util.sGet
+import qhaty.qqex.util.get
+import qhaty.qqex.util.mmkv
 
 class HomeFragment : BaseFragment() {
     private lateinit var binding: FragHomeBinding
@@ -18,8 +19,8 @@ class HomeFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.apply {
-            etMy.setText(sGet("myQQ", ""))
-            etEx.setText(sGet("exQQ", ""))
+            etMy.setText(mmkv["myQQ", ""])
+            etEx.setText(mmkv["exQQ", ""])
         }
     }
 }
