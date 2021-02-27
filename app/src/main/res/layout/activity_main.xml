@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".TempActivity">
 
     <EditText
         android:id="@+id/qq_mine_edit"

@@ -1,4 +1,4 @@
-package qhaty.qqex
+package qhaty.qqex.util
 
 import android.app.AlertDialog
 import android.content.ContentValues
@@ -15,6 +15,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
 import com.jaredrummler.android.shell.Shell
@@ -22,14 +23,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import qhaty.qqex.BuildConfig
+import qhaty.qqex.Data
+import qhaty.qqex.Ex
+import qhaty.qqex.application
 import java.io.*
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.text.SimpleDateFormat
 import java.util.*
 
-fun Context.toast(str: String? = null, id: Int? = null) {
-    Toast.makeText(this, str ?: this.resources.getText(id!!), Toast.LENGTH_SHORT).show()
+fun toast(str: String) {
+    GlobalScope.launch(Dispatchers.Main) {
+        Toast.makeText(application, str, Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun toast(@StringRes id: Int) {
+    toast(application.resources.getString(id))
 }
 
 fun encodeMD5(text: String): String {
@@ -87,7 +98,7 @@ suspend fun appendTextToAppData(context: Context, fileName: String, text: String
             if (path != null) {
                 if (!path.exists()) path.mkdirs()
             } else {
-                runOnUI { context.toast("无内置储存") }
+                runOnUI { toast("无内置储存") }
                 return@withContext
             }
             saveWordFile = File("${path.absolutePath}/$fileName")
@@ -199,7 +210,7 @@ fun checkDBCopied(context: Context): Boolean {
         val dir = context.getExternalFilesDir(null)
         File("${dir!!.absolutePath}/${Data.meQQ}.db").exists()
     } catch (e: Exception) {
-        context.toast("无内置储存 无法读取数据")
+        toast("无内置储存 无法读取数据")
         false
     }
 }
@@ -215,7 +226,7 @@ suspend fun delDB(context: Context) {
         }
     } catch (e: Exception) {
         withContext(Dispatchers.Main) {
-            context.toast("无内置储存 无法读取数据")
+            toast("无内置储存 无法读取数据")
         }
     }
 }
@@ -301,7 +312,7 @@ fun saveWordCloud(context: Context, view: View) {
                 val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
                 intent.data = uri
                 context.sendBroadcast(intent)
-                withContext(Dispatchers.Main) { context.toast("图片保存成功") }
+                withContext(Dispatchers.Main) { toast("图片保存成功") }
             }
         } else { //Android Q把文件插入到系统图库
             val contentValues = ContentValues().apply {
@@ -325,7 +336,7 @@ fun saveWordCloud(context: Context, view: View) {
                 contentValues.clear()
                 contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
                 resolver.update(item, contentValues, null, null)
-                withContext(Dispatchers.Main) { context.toast("图片保存成功") }
+                withContext(Dispatchers.Main) { toast("图片保存成功") }
             }
         }
     }

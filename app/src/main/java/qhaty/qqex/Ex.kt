@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import android.view.View
 import kotlinx.coroutines.*
+import qhaty.qqex.util.*
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -53,7 +54,7 @@ class Ex {
             progress = Progress(1000, "保存成功")
             withContext(Dispatchers.Main) {
                 saveHtmlFile?.let { sendToViewHtml(context, it) }
-                context.toast("文件保存至:Android/data/qhaty.qqex/files/Save")
+                toast("文件保存至:Android/data/qhaty.qqex/files/Save")
             }
         }
     }

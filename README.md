@@ -12,7 +12,7 @@
 ## 获得 key, 以下二选一
 
 1. ROOT权限自动获取
-2. 通过系统备份有办法获取到QQ的数据库文件(如MIUI) 查看`/com.tencent.mobileqq/files/kc`即可获得 key
+2. 通过系统备份有办法获取到QQ的数据库文件(如MIUI) 查看 `/com.tencent.mobileqq/files/kc` 即可获得 key
 
 ## 附
 

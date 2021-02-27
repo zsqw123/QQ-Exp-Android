@@ -3,4 +3,9 @@
     <string name="yes">是</string>
     <string name="no">否</string>
     <string name="set_qq_index">设置QQ号昵称索引</string>
+    <string name="export">导出</string>
+    <string name="setting">设置</string>
+    <string name="search">查找</string>
+    <string name="your_qq">你的QQ</string>
+    <string name="ex_qq">要导出的QQ</string>
 </resources>

@@ -18,8 +18,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import qhaty.qqex.MainActivity.Companion.mainActivity
-import qhaty.qqex.MainActivity.Companion.mainContext
+import qhaty.qqex.TempActivity.Companion.mainActivity
+import qhaty.qqex.TempActivity.Companion.mainContext
+import qhaty.qqex.util.*
 import splitties.alertdialog.alertDialog
 import splitties.alertdialog.negativeButton
 import splitties.alertdialog.okButton
@@ -64,7 +65,7 @@ fun Context.getImeiDialog(): AlertDialog = alertDialog(
     okButton {
         mainActivity!!.askForPermissions(Permission.READ_PHONE_STATE) { a ->
             if (a.isAllDenied(Permission.READ_PHONE_STATE)) {
-                context.toast("请手动授予权限自动获取key")
+                toast("请手动授予权限自动获取key")
             } else {
                 try {
                     val tm = context.getSystemService(AppCompatActivity.TELEPHONY_SERVICE) as TelephonyManager
