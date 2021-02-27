@@ -1,20 +1,18 @@
 # QQ聊天记录导出(进度96%)
 
-## 一个月之内(2021-03-28)一定完成新版本适配!
+## 一个月之内(2021-03-28)一定完成新版本适配!!
 
 ![image](https://img.shields.io/badge/build-passing-brightgreen.svg) [![GitHub license](https://img.shields.io/github/license/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/blob/master/LICENSE) [![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/zsqw123/QQ-Exp-Android) ![GitHub All Releases](https://img.shields.io/github/downloads/zsqw123/QQ-Exp-Android/total) [![GitHub stars](https://img.shields.io/github/stars/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/stargazers) [![GitHub forks](https://img.shields.io/github/forks/zsqw123/QQ-Exp-Android)](https://github.com/zsqw123/QQ-Exp-Android/network)
 
 ## 获取数据库 以下二选一
 
 1. 拥有root权限的手机 授予软件root权限即可
-2. 通过系统备份有办法获取到QQ的数据库文件(如MIUI)并进行手动导入(见文档底部)
+2. 通过系统备份有办法获取到QQ的数据库文件(如MIUI) 并进行手动导入(见文档底部)
 
-## 获得key 以下二选一
+## 获得 key, 以下二选一
 
-1. 软件自动获取IMEI作为Key (安装QQ时Android版本大于Q及以上失效)(授予读取设备信息权限 其实就是IMEI码 手机拨号界面输入*#06#即可获得)
-2. (暂不支持) 给好友发一条七个汉字或更长的消息（即便消息没有发送成功也可）  
-并将这段消息填入计算key的界面中得到key 复制key记录下来
-3. ROOT权限自动获取(会有3个结果 需自行判断)  
+1. ROOT权限自动获取
+2. 通过系统备份有办法获取到QQ的数据库文件(如MIUI) 查看`/com.tencent.mobileqq/files/kc`即可获得 key
 
 ## 附
 
@@ -33,7 +31,7 @@ slowtable_123456.db
 
 ### 导出结果
 
-**不再支持词云导出!** 因为会影响应用体积, 相关库如下:
+**不再支持词云导出!** 因为会影响应用体积, 最后一个有词云的版本是 `QQEX 1.4` 相关库如下:
 
 - [词云开源库](https://github.com/rome753/WordCloudView)
 - [jieba分词库](https://github.com/452896915/jieba-android)

@@ -15,5 +15,3 @@ object Data : KotprefModel() {
 object QQNickNameParse : KotprefModel() {
     val dataSet by stringSetPref()
 }
-
-data class Word(var str: String, var weight: Int = 1)
