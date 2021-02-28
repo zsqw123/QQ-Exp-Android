@@ -1,0 +1,18 @@
+# This is a basic workflow to help you get started with Actions
+
+name: ApkDebug
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        run: ./gradlew assembleDebug
