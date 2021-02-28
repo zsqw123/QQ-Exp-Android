@@ -37,9 +37,6 @@ fun toast(@StringRes id: Int) {
     toast(application.resources.getString(id))
 }
 
-fun String.f(vararg args: Any?) = String.format(this, args)
-
-
 fun encodeMD5(text: String): String {
     try {
         val instance: MessageDigest = MessageDigest.getInstance("MD5")
@@ -229,12 +226,13 @@ suspend fun delDB(context: Context) {
     try {
         withContext(Dispatchers.IO) {
             val dir = context.getExternalFilesDir(null)
-            val old = File("${dir!!.absolutePath}/slowtable_${Data.meQQ}.db")
-            val new = File("${dir.absolutePath}/${Data.meQQ}.db")
+            val old = File(dir, "slowtable_${mmkv["myQQ", ""]}.db")
+            val new = File(dir, "absolutePath}/${mmkv["myQQ", ""]}.db")
             if (new.exists()) new.delete()
             if (old.exists()) old.delete()
         }
     } catch (e: Exception) {
+        e.printStackTrace()
         toast("无内置储存 无法读取数据")
     }
 }

@@ -19,11 +19,11 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
     private var progress: Progress = Progress(0, R.string.awa)
         set(value) {
             field = value
-            val s: String = String.format("%.2f %%\n%s", value.per / 10.0, activity.resources.getString(value.msg))
+            val s: String = String.format("%.1f %%\n%s", value.per / 10.0, activity.resources.getString(value.msg))
             lifecycleScope.launch(Dispatchers.Main) { tv.text = s }
         }
 
-    suspend fun start() {
+    suspend fun start(end: () -> Unit) {
         progress = Progress(0, R.string.start_ex)
         val database: MutableList<File>? = getLocalDB()?.toMutableList()
         if (database != null) activity.expWithRebuildDialog(lifecycleScope) {
@@ -35,6 +35,7 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
                 }
             }
             export()
+            end()
         } else {
             val isCopied = copyUseRoot()
             if (!isCopied) {
@@ -42,6 +43,7 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
                 return
             }
             export()
+            end()
         }
 
     }
@@ -132,6 +134,12 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
             val head = "<head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /></head>"
             var appendHtml = ""
             var appendStr = ""
+            withContext(Dispatchers.IO) {
+                val path0 = application.getExternalFilesDir("savedHtml")
+                File(path0, "${mmkv["exQQ", ""]}.html").apply { if (exists()) delete() }
+                val path1 = application.getExternalFilesDir("words")
+                File(path1, mmkv["exQQ", ""]).apply { if (exists()) delete() }
+            }
             for (i in allChatDecode.indices) {
                 if (i == 0) appendHtml += head
                 val item = allChatDecode[i]
