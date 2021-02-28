@@ -43,12 +43,14 @@ class SettingFragment : BaseFragment() {
                     else mmkv["root"] = true
                 }
             }
-        }, SettingItemData(R.string.use_self_key, true, mmkv["use_self_key", false]) {
-            mmkv["use_self_key"] = it!!.isChecked
+        }, SettingItemData(R.string.use_self_key, true, mmkv["is-self-key", false]) {
+            mmkv["is-self-key"] = it!!.isChecked
         }, SettingItemData(R.string.self_key) {
             activity?.selfKeyDialog()
         }, SettingItemData(R.string.tutorial) {
             activity?.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/zsqw123/QQ-Exp-Android/blob/master/extra/info.md")))
+        }, SettingItemData(R.string.friendOrGroup, true, mmkv["friendOrGroup", true]) {
+            mmkv["friendOrGroup"] = it!!.isChecked
         })
 
 }

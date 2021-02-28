@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <external-files-path name="html_data" path="Save" />
+    <external-files-path name="html_data" path="savedHtml" />
 </paths>

@@ -2,17 +2,10 @@ package qhaty.qqex.util
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
-import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -31,7 +24,6 @@ import qhaty.qqex.application
 import java.io.*
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
-import java.text.SimpleDateFormat
 import java.util.*
 
 fun toast(str: String) {
@@ -246,145 +238,40 @@ suspend fun delDB(context: Context) {
     }
 }
 
-fun Context.getStopWords(): List<String> {
-    val text = this.readAssetsFileText("stopwords")
-    return text.replace("\r\n", "\n").split("\n")
-}
-
-fun Context.readAssetsFileText(fileName: String): String {
-    val inputStream = this.assets.open(fileName)
-    val result = inputStream.use { input ->
-        var offset = 0
-        var remaining = input.available().also { length ->
-            if (length > Int.MAX_VALUE) throw OutOfMemoryError("File $this is too big ($length bytes) to fit in memory.")
-        }.toInt()
-        val result = ByteArray(remaining)
-        while (remaining > 0) {
-            val read = input.read(result, offset, remaining)
-            if (read < 0) break
-            remaining -= read
-            offset += read
+suspend fun readKey(): String {
+    return try {
+        withContext(Dispatchers.IO) {
+            val dir = application.getExternalFilesDir(null)!!
+            val file = File("${dir.absolutePath}/kc")
+            if (file.exists()) return@withContext file.readText()
+            else ""
         }
-        if (remaining == 0) result else result.copyOf(offset)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        ""
     }
-    return result.toString(Charsets.UTF_8)
 }
 
-//判定输入的是否是汉字
-fun isChinese(c: Char): Boolean {
-    val ub = Character.UnicodeBlock.of(c)
-    return ub === Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS || ub === Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS || ub === Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A || ub === Character.UnicodeBlock.GENERAL_PUNCTUATION || ub === Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION || ub === Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS
-}
-
-//校验String是否全是中文
-fun checkStrChinese(name: String): Boolean {
-    var res = true
-    for (element in name) {
-        if (!isChinese(element)) {
-            res = false
-            break
+suspend fun sudo(vararg strings: String) {
+    withContext(Dispatchers.IO) {
+        try {
+            val su = Runtime.getRuntime().exec("su")
+            val outputStream = DataOutputStream(su.outputStream)
+            for (s in strings) {
+                outputStream.writeBytes(s + "\n")
+                outputStream.flush()
+            }
+            outputStream.writeBytes("exit\n")
+            outputStream.flush()
+            try {
+                su.waitFor()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+            outputStream.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
-    return res
+
 }
-
-fun saveWordCloud(context: Context, view: View) {
-    GlobalScope.launch(Dispatchers.Default) {
-        val bitmap = view.getBitmapCut()
-        val date = SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINA).format(Date())
-        // 保存bitmap
-        @Suppress("DEPRECATION")
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            val galleryPath = File(
-                Environment.getExternalStorageDirectory().absolutePath + File.separator + Environment.DIRECTORY_PICTURES
-            )
-            var fos: FileOutputStream? = null
-            withContext(Dispatchers.IO) {
-                var file: File? = null
-                try {
-                    file = File(galleryPath, "QQEX_${Data.friendQQ}${date}.jpg")
-                    if (!file.exists()) {
-                        file.parentFile!!.mkdirs()
-                        file.createNewFile()
-                    }
-                    fos = FileOutputStream(file)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                } finally {
-                    fos?.close()
-                }
-                val values = ContentValues().apply {
-                    put(MediaStore.Images.Media.DATA, file!!.absolutePath)
-                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                    put(MediaStore.Images.Media.DESCRIPTION, "保存自: QQEX")
-                }
-                val uri: Uri? =
-                    context.contentResolver.insert(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        values
-                    )
-                val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
-                intent.data = uri
-                context.sendBroadcast(intent)
-                withContext(Dispatchers.Main) { toast("图片保存成功") }
-            }
-        } else { //Android Q把文件插入到系统图库
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.TITLE, Data.friendQQ)
-                put(MediaStore.Images.Media.DISPLAY_NAME, "QQEX_${Data.friendQQ}${date}.jpg")
-                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                put(MediaStore.Images.Media.IS_PENDING, 1)
-                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-            }
-
-            val resolver = context.contentResolver
-            val collection = MediaStore.Images.Media
-                .getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val item = resolver.insert(collection, contentValues)
-
-            withContext(Dispatchers.IO) {
-                resolver.openFileDescriptor(item!!, "w", null).use { pfd ->
-                    val out = FileOutputStream(pfd!!.fileDescriptor)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
-                }
-                contentValues.clear()
-                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
-                resolver.update(item, contentValues, null, null)
-                withContext(Dispatchers.Main) { toast("图片保存成功") }
-            }
-        }
-    }
-}
-
-fun View.getBitmapCut(): Bitmap {
-    val v = this
-    val bitmap = Bitmap.createBitmap(v.width, v.height, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    val bgDrawable = v.background
-    if (bgDrawable != null) {
-        bgDrawable.draw(canvas)
-    } else {
-        canvas.drawColor(Color.WHITE)
-    }
-    v.draw(canvas)
-    return bitmap
-}
-//
-//class SeekListener(
-//    private val change: (() -> Unit)? = null,
-//    private val stop: (() -> Unit)? = null,
-//    private val start: (() -> Unit)? = null
-//) : SeekBar.OnSeekBarChangeListener {
-//    override fun onStartTrackingTouch(seekBar: SeekBar?) {
-//        start?.invoke()
-//    }
-//
-//    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-//        change?.invoke()
-//    }
-//
-//    override fun onStopTrackingTouch(seekBar: SeekBar?) {
-//        stop?.invoke()
-//    }
-//}

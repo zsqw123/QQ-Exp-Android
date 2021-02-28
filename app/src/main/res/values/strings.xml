@@ -28,4 +28,7 @@
     <string name="open_db">打开数据库中</string>
     <string name="ex_html">导出网页中</string>
     <string name="save_ok">保存成功</string>
+    <string name="self_key_ntfound">找不到自定义key</string>
+    <string name="no_key">请设置key或允许root</string>
+    <string name="friendOrGroup">开/关: 导出好友/群</string>
 </resources>

@@ -10,11 +10,11 @@ import qhaty.qqex.util.*
 
 fun Activity.selfKeyDialog() = MaterialDialog(this).show {
     title(R.string.self_key)
-    var str = mmkv["self_key", ""]
+    var str = mmkv["self-key", ""]
     input(prefill = str) { _, s -> str = s.toString() }
     positiveButton(R.string.ok) {
         if (str.isBlank()) toast(R.string.not_input_key)
-        else mmkv["self_key"] = str
+        else mmkv["self-key"] = str
     }
     negativeButton(R.string.cancel)
 }

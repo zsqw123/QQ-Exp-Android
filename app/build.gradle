@@ -11,7 +11,7 @@ android {
     defaultConfig {
         applicationId "qhaty.qqex"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 29
         versionCode 20210226
         versionName "1.5"
     }

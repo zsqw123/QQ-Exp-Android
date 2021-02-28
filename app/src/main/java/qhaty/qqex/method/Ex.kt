@@ -14,12 +14,12 @@ import java.io.File
 import java.util.*
 
 class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutineScope, private val activity: Activity) {
-    class Progress(var per: Int, @StringRes var msg: Int) {}
+    class Progress(var per: Int, @StringRes var msg: Int)
 
     private var progress: Progress = Progress(0, R.string.awa)
         set(value) {
             field = value
-            val s = "%.1f%\n%s".f(value.per / 10f, activity.resources.getString(value.msg))
+            val s: String = String.format("%.2f %%\n%s", value.per / 10.0, activity.resources.getString(value.msg))
             lifecycleScope.launch(Dispatchers.Main) { tv.text = s }
         }
 
@@ -41,7 +41,11 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
                 return
             }
         }
-        database = getLocalDB()!!.toMutableList()
+        database = getLocalDB()?.toMutableList()
+        if (database == null) {
+            progress = Progress(0, R.string.no_db)
+            return
+        }
         progress = Progress(150, R.string.open_db)
         val allCodedChat = ArrayList<CodedChat>()
         withContext(Dispatchers.IO) { addDByPath(database[0])?.let { allCodedChat.addAll(it) } } // 新数据库
@@ -61,9 +65,9 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
     private fun addDByPath(libFile: File): ArrayList<CodedChat>? {
         val chats = arrayListOf<CodedChat>()
         val sql = SQLiteDatabase.openDatabase(libFile.absolutePath, null, 0)
-        val friendOrTroop = if (Data.friendOrGroup) "friend" else "troop"
+        val friendOrTroop = if (mmkv["friendOrGroup", true]) "friend" else "troop"
         val sqlDo = "SELECT _id,msgData,msgtype,senderuin,time FROM mr_${friendOrTroop}_" +
-                "${encodeMD5(Data.friendQQ).toUpperCase(Locale.ROOT)}_New"
+                "${encodeMD5(mmkv["exQQ", ""]).toUpperCase(Locale.ROOT)}_New"
         try {
             val cursor = try {
                 sql.rawQuery(sqlDo, null)
@@ -138,14 +142,14 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
                     continue
                 }
                 if (i % 30 == 0) { //每 30 条保存一次
-                    appendTextToAppDownload(application, Data.friendQQ, appendHtml)
+                    appendTextToAppDownload(application, mmkv["exQQ", ""], appendHtml)
                     appendHtml = ""
-                    appendTextToAppData(application, Data.friendQQ, appendStr)
+                    appendTextToAppData(application, mmkv["exQQ", ""], appendStr)
                     appendStr = ""
                     progress = progress.apply { per = ((i.toFloat() / allChatDecode.size) * 650 + 300).toInt() }
                 } else if (i == allChatDecode.size - 1) {
-                    appendTextToAppDownload(application, Data.friendQQ, appendHtml)
-                    appendTextToAppData(application, Data.friendQQ, appendStr)
+                    appendTextToAppDownload(application, mmkv["exQQ", ""], appendHtml)
+                    appendTextToAppData(application, mmkv["exQQ", ""], appendStr)
                 }
             }
         }

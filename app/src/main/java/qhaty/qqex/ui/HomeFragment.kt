@@ -9,10 +9,8 @@ import kotlinx.coroutines.launch
 import qhaty.qqex.R
 import qhaty.qqex.databinding.FragHomeBinding
 import qhaty.qqex.method.Ex
-import qhaty.qqex.util.get
-import qhaty.qqex.util.mmkv
-import qhaty.qqex.util.set
-import qhaty.qqex.util.toast
+import qhaty.qqex.method.copyKeyUseRoot
+import qhaty.qqex.util.*
 
 class HomeFragment : BaseFragment() {
     private lateinit var binding: FragHomeBinding
@@ -37,7 +35,26 @@ class HomeFragment : BaseFragment() {
                 mmkv["myQQ"] = myStr
                 mmkv["exQQ"] = exStr
                 val ex = Ex(tvProgress, lifecycleScope, requireActivity())
-                lifecycleScope.launch { ex.start() }
+                val isSelfKey = mmkv["is-self-key", false]
+                if (isSelfKey) {
+                    val selfKey = mmkv["self-key", ""]
+                    if (selfKey.isBlank()) {
+                        toast(R.string.self_key_ntfound)
+                        return@setOnClickListener
+                    } else {
+                        mmkv["key"] = selfKey
+                        lifecycleScope.launch { ex.start() }
+                    }
+                } else if (mmkv["root", false]) {
+                    lifecycleScope.launch {
+                        copyKeyUseRoot()
+                        mmkv["key"] = readKey()
+                        lifecycleScope.launch { ex.start() }
+                    }
+                } else {
+                    toast(R.string.no_key)
+                    return@setOnClickListener
+                }
             }
         }
     }
