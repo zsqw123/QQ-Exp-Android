@@ -5,7 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import qhaty.qqex.R
 import qhaty.qqex.databinding.FragHomeBinding
 import qhaty.qqex.method.Ex
@@ -43,13 +45,25 @@ class HomeFragment : BaseFragment() {
                         return@setOnClickListener
                     } else {
                         mmkv["key"] = selfKey
-                        lifecycleScope.launch { ex.start() }
+                        lifecycleScope.launch {
+                            tvProgress.visable()
+                            btEx.hide()
+                            ex.start()
+                            tvProgress.gone()
+                            btEx.show()
+                        }
                     }
                 } else if (mmkv["root", false]) {
                     lifecycleScope.launch {
                         copyKeyUseRoot()
                         mmkv["key"] = readKey()
-                        lifecycleScope.launch { ex.start() }
+                        lifecycleScope.launch {
+                            tvProgress.visable()
+                            btEx.hide()
+                            ex.start()
+                            tvProgress.gone()
+                            btEx.show()
+                        }
                     }
                 } else {
                     toast(R.string.no_key)

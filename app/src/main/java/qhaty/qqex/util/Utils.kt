@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -252,26 +253,10 @@ suspend fun readKey(): String {
     }
 }
 
-suspend fun sudo(vararg strings: String) {
-    withContext(Dispatchers.IO) {
-        try {
-            val su = Runtime.getRuntime().exec("su")
-            val outputStream = DataOutputStream(su.outputStream)
-            for (s in strings) {
-                outputStream.writeBytes(s + "\n")
-                outputStream.flush()
-            }
-            outputStream.writeBytes("exit\n")
-            outputStream.flush()
-            try {
-                su.waitFor()
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
-            }
-            outputStream.close()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
+fun View.gone() {
+    GlobalScope.launch(Dispatchers.Main) { visibility = View.GONE }
+}
 
+fun View.visable() {
+    GlobalScope.launch(Dispatchers.Main) { visibility = View.VISIBLE }
 }

@@ -25,29 +25,9 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
 
     suspend fun start() {
         progress = Progress(0, R.string.start_ex)
-        var database: MutableList<File>? = getLocalDB()?.toMutableList()
-        fun export() = lifecycleScope.launch {
-            database = getLocalDB()?.toMutableList()
-            if (database == null) {
-                progress = Progress(0, R.string.no_db)
-                return@launch
-            }
-            progress = Progress(150, R.string.open_db)
-            val allCodedChat = ArrayList<CodedChat>()
-            withContext(Dispatchers.IO) { addDByPath(database!![0])?.let { allCodedChat.addAll(it) } } // 新数据库
-            if (database!!.size > 1) withContext(Dispatchers.IO) { addDByPath(database!![1])?.let { allCodedChat.addAll(it) } } // 旧数据库
-            progress = Progress(250, R.string.decode_db)
-            val allChats = chatsDecode(allCodedChat) // 解码数据库
-            progress = Progress(560, R.string.ex_html)
-            toHtml(allChats)
-            progress = Progress(1000, R.string.save_ok)
-            withContext(Dispatchers.Main) {
-                saveHtmlFile?.let { activity.sendToViewHtml(it) }
-                toast("文件保存至:Android/data/qhaty.qqex/files/savedHtml")
-            }
-        }
+        val database: MutableList<File>? = getLocalDB()?.toMutableList()
         if (database != null) activity.expWithRebuildDialog(lifecycleScope) {
-            if (!database!![0].exists()) {
+            if (!database[0].exists()) {
                 val isCopied = copyUseRoot()
                 if (!isCopied) {
                     progress = Progress(0, R.string.no_db)
@@ -66,6 +46,26 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
 
     }
 
+    private suspend fun export() {
+        val database = getLocalDB()?.toMutableList()
+        if (database == null) {
+            progress = Progress(0, R.string.no_db)
+            return
+        }
+        progress = Progress(150, R.string.open_db)
+        val allCodedChat = ArrayList<CodedChat>()
+        withContext(Dispatchers.IO) { addDByPath(database[0])?.let { allCodedChat.addAll(it) } } // 新数据库
+        if (database.size > 1) withContext(Dispatchers.IO) { addDByPath(database[1])?.let { allCodedChat.addAll(it) } } // 旧数据库
+        progress = Progress(250, R.string.decode_db)
+        val allChats = chatsDecode(allCodedChat) // 解码数据库
+        progress = Progress(560, R.string.ex_html)
+        toHtml(allChats)
+        progress = Progress(1000, R.string.save_ok)
+        withContext(Dispatchers.Main) {
+            saveHtmlFile?.let { activity.sendToViewHtml(it) }
+            toast("文件保存至:Android/data/qhaty.qqex/files/savedHtml")
+        }
+    }
 
     @SuppressLint("Recycle")
     private fun addDByPath(libFile: File): ArrayList<CodedChat>? {
