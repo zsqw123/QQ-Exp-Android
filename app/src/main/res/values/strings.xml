@@ -10,5 +10,10 @@
     <string name="ex_qq">要导出的QQ</string>
     <string name="not_complete">Not complete yet.</string>
     <string name="use_root">使用 root 权限</string>
+    <string name="use_self_key">使用自定义 key</string>
     <string name="self_key">自定义 key</string>
+    <string name="ok">确认</string>
+    <string name="not_input_key">未输入正确的 key</string>
+    <string name="cancel">取消</string>
+    <string name="tutorial">教程</string>
 </resources>

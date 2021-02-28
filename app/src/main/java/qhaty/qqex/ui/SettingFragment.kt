@@ -33,20 +33,25 @@ class SettingFragment : BaseFragment() {
         binding.settingRv.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
     }
 
-    private val items = listOf(SettingItemData(R.string.use_root, true, mmkv["root", false]) {
-        if (it!!.isChecked) {
-            lifecycleScope.launch(Dispatchers.Default) {
-                if (!Shell.SU.available()) withContext(Dispatchers.Main) { it.isChecked = false }
-                else mmkv["root"] = true
+    private val items = listOf(
+        SettingItemData(R.string.use_root, true, mmkv["root", false]) {
+            if (it!!.isChecked) {
+                lifecycleScope.launch(Dispatchers.Default) {
+                    if (!Shell.SU.available()) withContext(Dispatchers.Main) { it.isChecked = false }
+                    else mmkv["root"] = true
+                }
             }
-        }
-    }, SettingItemData(R.string.self_key, true, mmkv["self_key", false]) {
-        mmkv["self_key"] = it!!.isChecked
-    })
+        }, SettingItemData(R.string.use_self_key, true, mmkv["use_self_key", false]) {
+            mmkv["use_self_key"] = it!!.isChecked
+        }, SettingItemData(R.string.self_key) {
+            activity?.selfKeyDialog()
+        },SettingItemData(R.string.tutorial){
+
+        })
 
 }
 
-class SettingItemData(@StringRes var textId: Int, var hadSwitch: Boolean, var default: Boolean, var onClick: (view: CompoundButton?) -> Unit)
+class SettingItemData(@StringRes var textId: Int, var hadSwitch: Boolean = false, var default: Boolean = false, var onClick: (view: CompoundButton?) -> Unit)
 class SettingViewholder(val binding: ItemSettingBinding) : RecyclerView.ViewHolder(binding.root)
 
 class SettingAdapter(private val inflater: LayoutInflater, private val dataList: List<SettingItemData>) : RecyclerView.Adapter<SettingViewholder>() {
@@ -58,7 +63,7 @@ class SettingAdapter(private val inflater: LayoutInflater, private val dataList:
             settingWitch.isChecked = data.default
             settingWitch.visibility = if (data.hadSwitch) View.VISIBLE else View.GONE
             if (data.hadSwitch) settingWitch.setOnCheckedChangeListener { v, _ -> data.onClick(v) }
-            else settingTv.setOnClickListener { data.onClick(null) }
+            else root.setOnClickListener { data.onClick(null) }
         }
     }
 

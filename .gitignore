@@ -15,6 +15,5 @@
 /.idea/
 /gradle/wrapper/
 /app/release/
-extra/info.md
 /app/src/test/
 /app/src/androidTest/
