@@ -1,7 +1,5 @@
-package qhaty.qqex
+package qhaty.qqex.util
 
-import kotlinx.coroutines.*
-import qhaty.qqex.util.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.experimental.xor

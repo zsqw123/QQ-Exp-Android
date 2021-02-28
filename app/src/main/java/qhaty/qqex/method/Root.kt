@@ -37,17 +37,11 @@ suspend fun copyUseRoot(): Boolean {
                 val dir = application.getExternalFilesDir(null)!!
                 val qqPkg = "com.tencent.mobileqq"
                 val cmd0 = "am force-stop $qqPkg"
-                val cmd1 =
-                    "cp -f /data/data/$qqPkg/databases/${mmkv["myQQ", ""]}.db ${dir.absolutePath}/${mmkv["myQQ", ""]}.db"
-                val cmd2 =
-                    "cp -f /data/data/$qqPkg/databases/slowtable_${mmkv["myQQ", ""]}.db ${dir.absolutePath}/slowtable_${mmkv["myQQ", ""]}.db"
-                println("------------$cmd1")
-                println("------------$cmd2")
+                val cmd1 = "cp -f /data/data/$qqPkg/databases/${mmkv["myQQ", ""]}.db ${dir.absolutePath}/${mmkv["myQQ", ""]}.db"
+                val cmd2 = "cp -f /data/data/$qqPkg/databases/slowtable_${mmkv["myQQ", ""]}.db ${dir.absolutePath}/slowtable_${mmkv["myQQ", ""]}.db"
                 Shell.SU.run(cmd0, cmd1)
-                println("------------new done")
                 successFlag = true
                 Shell.SU.run(cmd2)
-                println("------------old done")
             }
         } else toast(R.string.open_root)
         return successFlag
@@ -65,8 +59,7 @@ suspend fun copyKeyUseRoot(): Boolean {
                 val dir = application.getExternalFilesDir(null)!!
                 val qqPkg = "com.tencent.mobileqq"
                 val cmd0 = "am force-stop $qqPkg"
-                val cmd1 =
-                    "cp -f /data/data/$qqPkg/files/kc ${dir.absolutePath}/kc"
+                val cmd1 = "cp -f /data/data/$qqPkg/files/kc ${dir.absolutePath}/kc"
                 Shell.SU.run(cmd0, cmd1)
             }
         } else toast(R.string.open_root)
