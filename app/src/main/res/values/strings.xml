@@ -16,4 +16,16 @@
     <string name="not_input_key">未输入正确的 key</string>
     <string name="cancel">取消</string>
     <string name="tutorial">教程</string>
+    <string name="cannot_blank">啥都没填你想干啥</string>
+    <string name="notice">提示</string>
+    <string name="has_local_db">检测到已导入过聊天数据文件，需要删除重建吗</string>
+    <string name="open_root">请到设置开启root权限!</string>
+    <string name="maybe_no_root">无root权限! 若已授权，请忽略</string>
+    <string name="no_db">无法获取数据库</string>
+    <string name="awa">awa</string>
+    <string name="start_ex">开始导出</string>
+    <string name="decode_db">解析数据库中</string>
+    <string name="open_db">打开数据库中</string>
+    <string name="ex_html">导出网页中</string>
+    <string name="save_ok">保存成功</string>
 </resources>

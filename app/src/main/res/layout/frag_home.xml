@@ -40,4 +40,12 @@
         android:contentDescription="@string/export"
         android:src="@drawable/ic_right"
         app:borderWidth="0dp" />
+
+    <TextView
+        android:id="@+id/tv_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="temple"
+        android:textColor="#000"
+        android:textSize="18sp" />
 </LinearLayout>

@@ -1,5 +1,7 @@
 package qhaty.qqex.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -45,8 +47,8 @@ class SettingFragment : BaseFragment() {
             mmkv["use_self_key"] = it!!.isChecked
         }, SettingItemData(R.string.self_key) {
             activity?.selfKeyDialog()
-        },SettingItemData(R.string.tutorial){
-
+        }, SettingItemData(R.string.tutorial) {
+            activity?.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/zsqw123/QQ-Exp-Android/blob/master/extra/info.md")))
         })
 
 }
@@ -55,6 +57,7 @@ class SettingItemData(@StringRes var textId: Int, var hadSwitch: Boolean = false
 class SettingViewholder(val binding: ItemSettingBinding) : RecyclerView.ViewHolder(binding.root)
 
 class SettingAdapter(private val inflater: LayoutInflater, private val dataList: List<SettingItemData>) : RecyclerView.Adapter<SettingViewholder>() {
+    override fun getItemCount(): Int = dataList.size
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = SettingViewholder(ItemSettingBinding.inflate(inflater, parent, false))
     override fun onBindViewHolder(holder: SettingViewholder, position: Int) {
         val data = dataList[position]
@@ -66,7 +69,4 @@ class SettingAdapter(private val inflater: LayoutInflater, private val dataList:
             else root.setOnClickListener { data.onClick(null) }
         }
     }
-
-    override fun getItemCount(): Int = dataList.size
-
 }

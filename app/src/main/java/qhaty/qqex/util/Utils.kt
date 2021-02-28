@@ -1,5 +1,6 @@
 package qhaty.qqex.util
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Context
@@ -43,6 +44,9 @@ fun toast(@StringRes id: Int) {
     toast(application.resources.getString(id))
 }
 
+fun String.f(vararg args: Any?) = String.format(this, args)
+
+
 fun encodeMD5(text: String): String {
     try {
         val instance: MessageDigest = MessageDigest.getInstance("MD5")
@@ -70,7 +74,7 @@ var saveHtmlFile: File? = null
 suspend fun appendTextToAppDownload(context: Context, fileName: String, text: String) {
     withContext(Dispatchers.IO) {
         if (saveHtmlFile == null) {
-            val path = context.getExternalFilesDir("Save")
+            val path = context.getExternalFilesDir("savedHtml")
             saveHtmlFile = File("$path/$fileName.html")
         }
         var out: BufferedWriter? = null
@@ -94,7 +98,7 @@ var saveWordFile: File? = null
 suspend fun appendTextToAppData(context: Context, fileName: String, text: String) {
     withContext(Dispatchers.IO) {
         if (saveWordFile == null) {
-            val path = context.getExternalFilesDir("Data")
+            val path = context.getExternalFilesDir("words")
             if (path != null) {
                 if (!path.exists()) path.mkdirs()
             } else {
@@ -205,6 +209,19 @@ fun sendToViewHtml(context: Context, file: File) {
     startActivity(context, viewIntent, null)
 }
 
+fun Activity.sendToViewHtml(file: File) {
+    val viewIntent = Intent(Intent.ACTION_VIEW)
+    viewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+        viewIntent.setDataAndType(Uri.fromFile(file), "text/html")
+    } else {
+        val htmlUri = FileProvider.getUriForFile(this, "qhaty.qqex.provider", file)
+        viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        viewIntent.setDataAndType(htmlUri, "text/html")
+    }
+    startActivity(this, viewIntent, null)
+}
+
 fun checkDBCopied(context: Context): Boolean {
     return try {
         val dir = context.getExternalFilesDir(null)
@@ -225,9 +242,7 @@ suspend fun delDB(context: Context) {
             if (old.exists()) old.delete()
         }
     } catch (e: Exception) {
-        withContext(Dispatchers.Main) {
-            toast("无内置储存 无法读取数据")
-        }
+        toast("无内置储存 无法读取数据")
     }
 }
 

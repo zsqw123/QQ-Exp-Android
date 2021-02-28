@@ -1,13 +1,12 @@
 package qhaty.qqex.ui
 
 import android.app.Activity
+import androidx.lifecycle.LifecycleCoroutineScope
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
+import kotlinx.coroutines.launch
 import qhaty.qqex.R
-import qhaty.qqex.util.get
-import qhaty.qqex.util.mmkv
-import qhaty.qqex.util.set
-import qhaty.qqex.util.toast
+import qhaty.qqex.util.*
 
 fun Activity.selfKeyDialog() = MaterialDialog(this).show {
     title(R.string.self_key)
@@ -18,4 +17,16 @@ fun Activity.selfKeyDialog() = MaterialDialog(this).show {
         else mmkv["self_key"] = str
     }
     negativeButton(R.string.cancel)
+}
+
+fun Activity.expWithRebuildDialog(lifecycleScope: LifecycleCoroutineScope, callback: suspend () -> Unit) = MaterialDialog(this).show {
+    title(R.string.notice)
+    message(R.string.has_local_db)
+    positiveButton(R.string.ok) {
+        lifecycleScope.launch {
+            delDB(applicationContext)
+            callback.invoke()
+        }
+    }
+    negativeButton(R.string.cancel) { lifecycleScope.launch { callback.invoke() } }
 }

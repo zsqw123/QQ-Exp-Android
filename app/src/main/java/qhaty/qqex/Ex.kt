@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import android.view.View
 import kotlinx.coroutines.*
+import qhaty.qqex.method.GetDB
 import qhaty.qqex.util.*
 import java.io.File
 import java.io.IOException
@@ -202,13 +203,15 @@ fun getDateString(date: Int): String {
 
 fun fix(password: String): String {
     var str = ""
-    for (i in password.indices) str += chr(ord(password[i]) xor ord(Data.key[i % Data.key.length]))
+    val key = mmkv["key", ""]
+    for (i in password.indices) str += chr(ord(password[i]) xor ord(key[i % key.length]))
     return str
 }
 
 fun fix(password: ByteArray): String {
     var rowByte = byteArrayOf()
-    for (i in password.indices) rowByte += (password[i] xor ord(Data.key[i % Data.key.length]).toByte())
+    val key = mmkv["key", ""]
+    for (i in password.indices) rowByte += (password[i] xor ord(key[i % key.length]).toByte())
     return String(rowByte)
 }
 
