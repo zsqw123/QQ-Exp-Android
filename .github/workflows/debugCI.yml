@@ -7,12 +7,48 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+# workflow的所有作业job
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  # 单个job的名字：测试Android项目
+  # 每个job执行完毕会默认删除所有文件等
+  #   可通过cache来保留特定文件夹和文件
+  #   也可使用upload-artifact上传来实现保留文件，再配合download-artifact实现多job之间的数据传递
+  test:
+    # test这个作业的实际名字
+    # 也是执行build时Actions监控处显示的名字
+    name: Run Unit Tests
+    # job的运行平台，还有windows、macos及不同版本可供选择
+    runs-on: ubuntu-18.04
+    # test任务的具体步骤，可以有很多个步骤，都写在这里
+    steps:
+      # 使用别人写好的指定版本的actions脚本，名称是checkout
+      # 这是步骤1，即每个'-'符号到下一个'-'符号之间的部分是一个步骤
+      - uses: actions/checkout@v2
+      # 这是步骤2，创建java环境，with里面填写actions的输入参数
+      - name: set up JDK 1.8
+        uses: actions/setup-java@v1
+        # 设置setup-java脚本的输入参数
+        with:
+          java-version: 1.8
+      # 步骤3，执行shell命令
+      - name: Unit tests
+        run: bash ./gradlew test --stacktrace
+
+  apk:
+    name: Generate APK
+    runs-on: ubuntu-18.04
 
     steps:
       - uses: actions/checkout@v2
+      - name: set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Build debug APK
+        run: bash ./gradlew assembleDebug --stacktrace
+      # 利用upload-artifact实现build结果的保存（可以在Actions的控制台下载压缩文件）
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          path: app/build/outputs/apk/debug/app-debug.apk
 
-      - name: Run tests
-        run: ./gradlew assembleDebug
