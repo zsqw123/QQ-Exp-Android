@@ -83,7 +83,6 @@ class Ex(private val tv: TextView, private val lifecycleScope: LifecycleCoroutin
                 null
             } ?: return null
             if (cursor.count > 1) cursor.moveToFirst()
-            dbLastData = cursor.getBlob(1)
             do {
                 val data = cursor.getBlob(1)
                 val type = cursor.getInt(2)
