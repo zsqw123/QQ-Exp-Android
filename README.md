@@ -41,9 +41,7 @@
 - [词云开源库](https://github.com/rome753/WordCloudView)
 - [jieba分词库](https://github.com/452896915/jieba-android)
 
-| 导出网页                    | 导出词云                    |
-| --------------------------- | --------------------------- |
-| [![导出网页](r.jpg)](r.jpg) | [![导出网页](c.jpg)](c.jpg) |
+[![导出网页](https://cdn.jsdelivr.net/gh/zsqw123/cdn@master/picCDN/20210228145640.webp)](https://cdn.jsdelivr.net/gh/zsqw123/cdn@master/picCDN/20210228145640.webp)
 
 #### others
 
