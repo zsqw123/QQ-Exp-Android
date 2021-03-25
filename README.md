@@ -52,6 +52,6 @@
 > 3. 生成HTML文件在sdcard/Android/data/qhaty.qqex/files/savedHtml
 > 4. 测试QQ: 8.5.5, 理论大多数版本都能用
 
-#### 支持
+#### 其他
 
-![ali](https://cdn.jsdelivr.net/gh/zsqw123/cdn@master/img/custom/donate/ali.jpg)
+仅供交流学习, 禁止商用
